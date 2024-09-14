@@ -463,6 +463,16 @@ def register_account():
 def propagate():
 
     values = request.url.split("?")[1].split("&")
+    print(f"{values=}")
+
+    response = {
+        "message": "propagation test successful",
+        "values": values
+                }
+    
+    return jsonify(response), 200
+
+
     
     
 

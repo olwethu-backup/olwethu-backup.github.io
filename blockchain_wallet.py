@@ -120,12 +120,18 @@ def register():
 def send():
     values = request.get_json()
 
-    print(f"{values=}")
+
 
     response = {
         "message": "successful test",
         "values": values
     }
+    
+
+    for i in wallet.nodes:
+
+        node_response = requests.get(url = i + "/propagate", params = {i:values[i] for i in values})
+
 
     return jsonify(response), 200
 
