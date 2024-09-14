@@ -131,9 +131,9 @@ def send():
     for i in wallet.nodes:
 
         node_response = requests.get(url = i + "/propagate", params = {i:values[i] for i in values})
+        print(f"{node_response.json()=}")
 
-
-    return jsonify(response), 200
+    return response, 200
 
 @app.route("/wallets/login", methods = ["GET"])
 def login():
