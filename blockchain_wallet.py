@@ -116,7 +116,18 @@ def register():
 
     return jsonify(response), 201
 
+@app.route("/send", methods = ["POST"])
+def send():
+    values = request.get_json()
 
+    print(f"{values=}")
+
+    response = {
+        "message": "successful test",
+        "values": values
+    }
+
+    return jsonify(response), 200
 
 @app.route("/wallets/login", methods = ["GET"])
 def login():
@@ -131,6 +142,7 @@ def login():
     if values.query_string == b'':  #this means that the GET request is sending JSON instead of a query string
         values = request.get_json()
         username = values.get("username")
+       
         password = sha256(values.get("password").encode()).hexdigest()
     
     else: #if it gets to this stage, it means that the request's content was not written in JSON
@@ -139,6 +151,7 @@ def login():
         # R = values.split("?")[1].split("&")
         # print(f"{R=}")
         username = values[0].split("=")[1]
+        
         password = values[1].split("=")[1]
 
        # print(f"{username=}")
@@ -163,6 +176,7 @@ def login():
         return "Error: Incorrect username or password", 400
    
     wallet.username = username
+    
     wallet.address = wallet_dict[username]["address"]
     wallet.available = wallet_dict[username]["available balance"]
     wallet.pending = wallet_dict[username]["pending balance"]

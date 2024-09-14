@@ -537,7 +537,26 @@ def login_offline():
     blockchain.address = node_dict[username]["address"]
     blockchain.username = username
     blockchain.port = node_dict[username]["port"]
+
+    p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : blockchain.port + 1, "subprocess" : True})
+
     print(f"{blockchain.port=}")
+
+    blockchain.wallet_address = "http://localhost:" + str(blockchain.port + 1) #all transactions to and from this node will use this wallet port
+
+    p1.start()
+
+    print(f"=======\n\n\n\n{blockchain.wallet_address}\n\n\n\n=======")
+
+    response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
+
+    response, status_code = response.json(), response.status_code
+
+
+    
+    if status_code != 200:
+        print("Login unsuccessful")
+        return "Error"
 
     
     print("Login successful")
@@ -554,11 +573,11 @@ def main():
 
     port = login_offline() #int(input("Blockchain Node - Select port (5000/5001): "))
     if port != -1:
-        p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : port + 1, "subprocess" : True})
+        # p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : port + 1, "subprocess" : True})
 
-        blockchain.wallet_address = "http://localhost:" + str(port + 1) #all transactions to and from this node will use this wallet port
+        # blockchain.wallet_address = "http://localhost:" + str(port + 1) #all transactions to and from this node will use this wallet port
 
-        p1.start()
+        # p1.start()
         app.run(host="0.0.0.0", port=port)
 
         # p2 = Process(target = app.run, kwargs = {"host":"0.0.0.0", "port": int(input("Blockchain Node - Select port (5000/5001): "))})
