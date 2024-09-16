@@ -505,7 +505,7 @@ def login():
     blockchain.address = node_dict[username]["address"]
     blockchain.username = username
     blockchain.port = node_dict[username]["port"]
-    print(f"{blockchain.port=}")
+    print(f"-> {blockchain.port=}")
     
     response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
     # print(f"{response=}")
