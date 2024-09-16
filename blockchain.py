@@ -48,7 +48,7 @@ class BlockChain:
     def save_chain(self):
         nodes_dict = json.load(open("nodes.json", "r"))
 
-        nodes_dict[self.username]["chain"] = self.chain
+        nodes_dict[self.username]["chain"] = list(self.chain)
 
         nodes_json = json.dumps(nodes_dict)
 
@@ -74,6 +74,18 @@ class BlockChain:
 
         parsed_url = urlparse(address)
         self.nodes.add(parsed_url.netloc)
+
+        node_dict = json.load(open("nodes.json", "r"))
+
+        node_dict[self.username]["nodes"] = list(self.nodes)
+
+
+        
+       
+        node_json = json.dumps(node_dict)
+        node_file = open("nodes.json", "w")
+        node_file.write(node_json)
+        node_file.close()
         
 
     def valid_chain(self, chain):
@@ -397,7 +409,8 @@ def register_account():
         "password_encrypted": "True",
         "address":str(uuid4()).replace("-", ""),
         "connected wallets":"",
-        "chain":[]
+        "chain":[],
+        "nodes":[]
         
     }
     
@@ -407,18 +420,23 @@ def register_account():
 
    
     new_port = port_data + 2
+    # print("111111111")
     port_file = open("port_counter.txt", "w")
+    # print("22222222222")
     port_file.write(str(new_port))
+    # print("3333333333")
     port_file.close()
-
+    # print("444444444")
 
     node_dict = json.load(open("nodes.json", "r"))
-
+    # print("5555555555")
     if node_info["username"] in node_dict:
+        # print("66666666666")
         return "Error: A node with this username already exists", 400
 
     if node_info["connected wallets"] == "":
-        #if no connected wallet already exists, then we create one
+        # print("7777777777")
+        #if no connected wallet already exists, we create one
         
         wallet_info = {
             "username": username,
@@ -426,12 +444,17 @@ def register_account():
             "password_encrypted": "True"
         }
 
+        # print("88888888888888")
+
         json_data = wallet_info
-        
-        # print(f"{json_data=}")
+
+        # print("99999999999")        
+        # # print(f"{json_data=}")
 
 
         wallet_response_data = requests.post(url = blockchain.wallet_address + "/wallets/register", json = json_data)
+
+        # print("101010101010101010")
         # print(f"{wallet_response_data=}")
         wallet_response, wallet_response_code = wallet_response_data.json(), wallet_response_data.status_code
         # print(f"{wallet_response=}")
@@ -444,7 +467,7 @@ def register_account():
         
 
 
-    node_dict[node_info["username"]] = {"address":node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"]}
+    node_dict[node_info["username"]] = {"address":node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"], "nodes":node_info["nodes"]}
     node_json = json.dumps(node_dict)
 
     node_file = open("nodes.json", "w")
@@ -465,10 +488,26 @@ def propagate():
     values = request.url.split("?")[1].split("&")
     print(f"{values=}")
 
+    values_dict = {}
+
+    for v in values:
+        v_split = v.split("=")
+        values_dict[v_split[0]] = v_split[1]
+    
+    print(f"{values_dict=}")
+
     response = {
         "message": "propagation test successful",
         "values": values
                 }
+    print("======ENTERING FOR LOOP======")
+    print(f"{blockchain.nodes=}")
+    for node in blockchain.nodes:
+            try:
+                node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
+                print(f">>>>>> {node_response.json()=}")
+            except:
+                print(f"{node} is unavailable")
     
     return jsonify(response), 200
 
@@ -503,9 +542,10 @@ def login():
         return "Error: Incorrect username or password", 400
     
     blockchain.address = node_dict[username]["address"]
+    blockchain.nodes = node_dict[username]["nodes"]
     blockchain.username = username
     blockchain.port = node_dict[username]["port"]
-    print(f"-> {blockchain.port=}")
+    print(f"{blockchain.port=}")
     
     response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
     # print(f"{response=}")
@@ -545,6 +585,7 @@ def login_offline():
         return -1
        
     blockchain.address = node_dict[username]["address"]
+    blockchain.nodes = node_dict[username]["nodes"]
     blockchain.username = username
     blockchain.port = node_dict[username]["port"]
 

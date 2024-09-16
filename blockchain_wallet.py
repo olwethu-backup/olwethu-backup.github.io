@@ -53,13 +53,15 @@ def register():
     """
         Receives a username and password (in JSON), will automatically generate an address for this account.
     """
-
+    # print("oneoneoneoneoneoneone")
     values = request.get_json()
     username = values.get("username")
     if ("password_encrypted" not in values) or values.get("password_encrypted") == "False":
-        print(f"{values=}")
+        # print("twotwotwotwotwotwotwotwotwo")
+        # print(f"{values=}")
         password = sha256(values.get("password").encode()).hexdigest() #TODO: Encrypt this password
     else:
+        # print("threethreethreethreethreethreethreethree")
         password = values.get("password")
     
 
@@ -67,13 +69,14 @@ def register():
     
     port_file = open("port_counter.txt", "r")
     port_data = int(port_file.read())
-    
+    # print("fourfourfourfourfourfourfourfourfourfour")
    
     new_port = port_data + 2
     port_file = open("port_counter.txt", "w")
     port_file.write(str(new_port))
     port_file.close()
 
+    # print("sixsixsixsixsixsixsix")
 
 
 
@@ -92,13 +95,17 @@ def register():
 
     }
     
+    # print("sevensevensevensevensevenseven")
     
 
     wallet_dict = json.load(open("wallets.json", "r"))
 
     if wallet_info['username'] in wallet_dict:
+        # print("eighteighteighteighteighteight")
         return "Error: A wallet with this username already exists", 400
     
+    # print("nineninenineninenineninenineninenine")
+
     wallet_dict[wallet_info['username']] = {"address": wallet_info['address'], "password": wallet_info['password'], "available balance": wallet_info["pending balance"], "pending balance": wallet_info["total balance"], "total balance": wallet_info["total balance"], "nodes": wallet_info["nodes"], "port": wallet_info["port"]}
     wallet_json = json.dumps(wallet_dict) #TODO: encrypt password (it's currently stored as plaintext)
 
@@ -109,10 +116,14 @@ def register():
 
     wallet_file.close()
 
+    # print("tententententententententen")
+
     response = {
         'message': f"Wallet '{wallet_info['username']}' created",
         'address': wallet_info['address']
     }
+
+    # print("eleveneleveneleveneleveneleveneleveneleveneleven")
 
     return jsonify(response), 201
 
@@ -130,8 +141,13 @@ def send():
 
     for i in wallet.nodes:
 
-        node_response = requests.get(url = i + "/propagate", params = {i:values[i] for i in values})
-        print(f"{node_response.json()=}")
+        try:
+            node_response = requests.get(url = "http://" + i + "/propagate", params = {i : values[i] for i in values})
+            print(f"{node_response.json()=}")
+        except:
+            print(f"{i} is unavailable")
+            pass
+
 
     return response, 200
 
@@ -209,12 +225,14 @@ def register_node():
 
     values = request.get_json()
 
-    address = values.get("address")
+    nodes = values.get("nodes")
 
-    wallet.nodes.add(address)
+    for address in nodes:
+        wallet.nodes.add(address)
 
     wallet_data = json.load(open("wallets.json", "r"))
 
+    
     wallet_info = wallet_data[wallet.username]
 
     wallet_data[wallet.username]["nodes"] = list(wallet.nodes)
@@ -227,7 +245,8 @@ def register_node():
 
     wallet_file.close()
 
-    response = {"message": f"node '{address}' successfully registered"}
+    response = {"message": f"nodes successfully registered",
+                "nodes": nodes}
 
     return jsonify(response), 201
 
