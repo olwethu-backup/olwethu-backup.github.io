@@ -131,13 +131,14 @@ def register():
 def send():
     values = request.get_json()
 
-
+    print(f"{values=}")
 
     response = {
         "message": "successful test",
         "values": values
     }
     
+    print(f"{wallet.nodes=}")
 
     for i in wallet.nodes:
 
@@ -154,7 +155,7 @@ def send():
 @app.route("/wallets/login", methods = ["GET"])
 def login():
 
-  #  print("-----1-----")
+    print("-----1-----")
     # print(f"{request=}")
     # print(f"{request.__dict__}")
     # request.__dict__
@@ -181,9 +182,9 @@ def login():
         
        
 
-    #print("-----1.5-----")
+    print("-----1.5-----")
     
-    #print("-----2-----")
+    print("-----2-----")
     wallet_dict = json.load(open("wallets.json", "r"))
     
     if username not in wallet_dict:
@@ -205,7 +206,9 @@ def login():
     wallet.total = wallet_dict[username]["total balance"]
     wallet.nodes = set(wallet_dict[username]["nodes"])
 
-    #print("-----4-----")
+    print(f"=\n=\n=\n=\n=\n=\n{wallet.nodes=}=\n=\n=\n=\n=\n=\n")
+
+    print("-----4-----")
     response = {"message": "Login successful",
                 "details": {
                     "address": wallet_dict[username]["address"],
@@ -213,7 +216,8 @@ def login():
                     "pending balance" : wallet_dict[username]["pending balance"],
                     "total balance" : wallet_dict[username]["total balance"]
                 }}
-    #print("-----5-----")
+    
+    print("-----5-----")
     return jsonify(response), 200
 
 # @app.route("/wallets/send", methods = ["GET"])

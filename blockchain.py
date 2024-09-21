@@ -598,11 +598,14 @@ def login_offline(username = "", password = ""):
 
     p1.start()
 
-    print(f"=======\n\n\n\n{blockchain.wallet_address}\n\n\n\n=======")
-
+    print(f">=======\n\n\n\n{blockchain.wallet_address}\n\n\n\n=======<")
+    print("--------------------------------------------------")
     response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
-
+    print(":::::::::::::::::::::::::::::::::::::::::::::::::")
     response, status_code = response.json(), response.status_code
+    print("--------------------------->")
+    print(f"{response=}")
+    print(f"{status_code=}")
 
 
     
