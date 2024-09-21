@@ -564,12 +564,13 @@ def login():
     return jsonify(response), 200
     
 
-def login_offline():
+def login_offline(username = "", password = ""):
 
     
-
-    username = input("username: ")
-    password = sha256(input("password: ").encode()).hexdigest()
+    if (username == "") or (password == ""):
+        # print(">>>>>>>>><<<<<<<<<<<<<")
+        username = input("username: ")
+        password = sha256(input("password: ").encode()).hexdigest()
 
     node_dict = json.load(open("nodes.json", "r"))
 
@@ -618,11 +619,11 @@ def login_offline():
 
     
 
-def main():
+def main(username = "", password = ""):
     # blockchain_wallet.main()
     # subprocess.check_call("python blockchain_wallet.py", shell = True)
 
-    port = login_offline() #int(input("Blockchain Node - Select port (5000/5001): "))
+    port = login_offline(username, password) #int(input("Blockchain Node - Select port (5000/5001): "))
     if port != -1:
         # p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : port + 1, "subprocess" : True})
 
