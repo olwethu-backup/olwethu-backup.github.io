@@ -2,6 +2,7 @@ import blockchain
 import subprocess
 import json
 from multiprocessing import Process
+import time
 
 
 def main():
@@ -22,6 +23,8 @@ def main():
     for process in node_processes:
         # print(f"{process=}")
         process.start()
+        print(f"{process=}")
+        time.sleep(8)
 
 if __name__ == "__main__":
     main()
