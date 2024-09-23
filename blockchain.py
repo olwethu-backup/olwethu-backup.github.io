@@ -36,18 +36,20 @@ class BlockChain:
 
         #Create genesis block
 
-        self.new_block(previous_hash=1, proof=100)
-
-        #code for consensus with other nodes
-        self.nodes = set()
-
         self.username = ""
         self.wallet_address = ""
         self.port = -1
 
+        
+
+        #code for consensus with other nodes
+        self.nodes = set()
+
+      
+
     def save_chain(self):
         nodes_dict = json.load(open("nodes.json", "r"))
-
+        print(f"{self.username=}")
         nodes_dict[self.username]["chain"] = list(self.chain)
 
         nodes_json = json.dumps(nodes_dict)
@@ -58,8 +60,14 @@ class BlockChain:
 
         nodes_file.close()
 
+    def load_chain(self):
+        nodes_dict = json.load(open("nodes.json", "r"))
 
-   
+        chain = nodes_dict[self.username]["chain"]
+
+        return chain
+
+    
 
 
 
@@ -222,11 +230,13 @@ class BlockChain:
         self.current_transactions = []
 
         self.chain.append(block)
+
+        self.save_chain()
         return block
 
 
 
-    def new_transaction(self, sender, recipient, amount, transaction_id="xxxxxxxxxxx"):
+    def new_transaction(self, sender, recipient, amount, transaction_id, priority = False):
 
         #Appends a new transaction to the transaction list
         
@@ -243,8 +253,10 @@ class BlockChain:
                                'amount': amount,
                                'transaction_id': transaction_id}
             
-        
-        self.current_transactions.append(transaction_details)
+        if priority:
+            self.current_transactions = [transaction_details] + self.current_transactions
+        else:
+            self.current_transactions.append(transaction_details)
 
         return self.last_block['index'] + 1
 
@@ -294,7 +306,7 @@ def mine():
 
     #We must be rewarded for finding the proof. (New unit of cryptocurrency is created to reward the miner)
     #The sender is "0" to signify that this node has mined a new coin.
-
+    
     blockchain.new_transaction(
         sender = "0",
         recipient = node_identifier,
@@ -315,6 +327,7 @@ def mine():
         "previous_hash": block["previous_hash"]
     }
 
+    blockchain.save_chain()
     return jsonify(response), 200
 
 @app.route('/transactions/new', methods=['POST'])
@@ -389,6 +402,7 @@ def consensus():
             'message': 'Our chain was replaced',
             'new_chain': blockchain.chain
         }
+        blockchain.save_chain()
 
     else:
         response = {
@@ -416,7 +430,7 @@ def register_account():
         "nodes":[]
         
     }
-    
+        
     port_file = open("port_counter.txt", "r")
     port_data = int(port_file.read())
     print(f"{port_data=}")
@@ -434,7 +448,7 @@ def register_account():
     node_dict = json.load(open("nodes.json", "r"))
     # print("5555555555")
     if node_info["username"] in node_dict:
-        # print("66666666666")
+
         return "Error: A node with this username already exists", 400
 
     if node_info["connected wallets"] == "":
@@ -558,6 +572,12 @@ def login():
     blockchain.nodes = node_dict[username]["nodes"]
     blockchain.username = username
     blockchain.port = node_dict[username]["port"]
+    blockchain.chain = node_dict[username]["chain"]
+
+    # if len(blockchain.chain) == 0:
+    #     mine()
+
+
     print(f"{blockchain.port=}")
     
     response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
@@ -566,6 +586,10 @@ def login():
     
     if status_code != 200:
         return response, status_code
+    
+    if len(blockchain.chain) == 0:
+        blockchain.new_block(previous_hash=1, proof=100)
+
 
     response = {
         "message": "Login successful",
@@ -602,6 +626,10 @@ def login_offline(username = "", password = ""):
     blockchain.nodes = node_dict[username]["nodes"]
     blockchain.username = username
     blockchain.port = node_dict[username]["port"]
+    blockchain.chain = node_dict[username]["chain"]
+    
+    if len(blockchain.chain) == 0:
+        blockchain.new_block(previous_hash=1, proof=100)
 
     p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : blockchain.port + 1, "subprocess" : True})
 
