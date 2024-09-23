@@ -495,19 +495,26 @@ def propagate():
         values_dict[v_split[0]] = v_split[1]
     
     print(f"{values_dict=}")
-
     response = {
-        "message": "propagation test successful",
-        "values": values
-                }
-    print("======ENTERING FOR LOOP======")
-    print(f"{blockchain.nodes=}")
-    for node in blockchain.nodes:
-            try:
-                node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
-                print(f">>>>>> {node_response.json()=}")
-            except:
-                print(f"{node} is unavailable")
+            "message": "propagation test successful",
+            "values": values
+                    }
+
+    if values_dict not in blockchain.current_transactions:
+        
+        blockchain.current_transactions.append(values_dict)
+
+        
+        print("======ENTERING FOR LOOP======")
+        print(f"{blockchain.nodes=}")
+        for node in blockchain.nodes:
+                try:
+                    node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
+                    print(f">>>>>> {node_response.json()=}")
+                except:
+                    print(f"{node} is unavailable")
+    else:
+        pass
     
     return jsonify(response), 200
 
