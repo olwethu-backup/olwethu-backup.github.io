@@ -226,7 +226,7 @@ class BlockChain:
 
 
 
-    def new_transaction(self, sender, recipient, amount):
+    def new_transaction(self, sender, recipient, amount, transaction_id="xxxxxxxxxxx"):
 
         #Appends a new transaction to the transaction list
         
@@ -240,7 +240,9 @@ class BlockChain:
 
         transaction_details = {'sender': sender,
                                'recipient': recipient,
-                               'amount': amount}
+                               'amount': amount,
+                               'transaction_id': transaction_id}
+            
         
         self.current_transactions.append(transaction_details)
 
@@ -296,7 +298,8 @@ def mine():
     blockchain.new_transaction(
         sender = "0",
         recipient = node_identifier,
-        amount = 1
+        amount = 1,
+        transaction_id = str(uuid4()).replace("-", "")
     )
 
     #Forge the new Block by adding it to the chain
@@ -328,7 +331,7 @@ def new_transaction():
 
     #Create a new Transaction
 
-    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
+    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'], str(uuid4()).replace("-", ""))
 
     response = {'message': f'Transaction will be added to Block {index}'}
 
@@ -486,8 +489,10 @@ def register_account():
 def propagate():
 
     values = request.url.split("?")[1].split("&")
-    print(f"{values=}")
 
+    print(f"=============={blockchain.username}==============")
+    print(f"{values=}")
+    print(f"{blockchain.current_transactions=}")
     values_dict = {}
 
     for v in values:
@@ -495,6 +500,7 @@ def propagate():
         values_dict[v_split[0]] = v_split[1]
     
     print(f"{values_dict=}")
+
     response = {
             "message": "propagation test successful",
             "values": values
@@ -502,7 +508,7 @@ def propagate():
 
     if values_dict not in blockchain.current_transactions:
         
-        blockchain.current_transactions.append(values_dict)
+        blockchain.new_transaction(values_dict['sender'], values_dict['recipient'], values_dict['amount'], values_dict['transaction_id'])
 
         
         print("======ENTERING FOR LOOP======")

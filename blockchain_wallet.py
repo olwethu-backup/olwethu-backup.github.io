@@ -133,7 +133,13 @@ def send():
 
     print(f"{values=}")
 
+    values_dict = {i : values[i] for i in values}
+
+    values_dict["transaction_id"] = str(uuid4()).replace("-", "")
+    values_dict["sender"] = "127.0.0.1:" + str(wallet.port)
+
     response = {
+        
         "message": "successful test",
         "values": values
     }
@@ -143,7 +149,7 @@ def send():
     for i in wallet.nodes:
 
         try:
-            node_response = requests.get(url = "http://" + i + "/propagate", params = {i : values[i] for i in values})
+            node_response = requests.get(url = "http://" + i + "/propagate", params = values_dict)
             print(f"{node_response.json()=}")
         except:
             print(f"{i} is unavailable")
@@ -199,12 +205,15 @@ def login():
         return "Error: Incorrect username or password", 400
    
     wallet.username = username
+
+    print(f"{wallet.username=}")
     
     wallet.address = wallet_dict[username]["address"]
     wallet.available = wallet_dict[username]["available balance"]
     wallet.pending = wallet_dict[username]["pending balance"]
     wallet.total = wallet_dict[username]["total balance"]
     wallet.nodes = set(wallet_dict[username]["nodes"])
+    wallet.port = wallet_dict[username]["port"]
 
     print(f"=\n=\n=\n=\n=\n=\n{wallet.nodes=}=\n=\n=\n=\n=\n=\n")
 
