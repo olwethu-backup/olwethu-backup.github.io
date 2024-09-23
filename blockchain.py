@@ -535,6 +535,8 @@ def propagate():
                     print(f"{node} is unavailable")
     else:
         pass
+
+    # mine()
     
     return jsonify(response), 200
 
