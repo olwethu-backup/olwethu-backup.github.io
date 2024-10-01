@@ -34,6 +34,8 @@ class BlockChain:
         self.chain = []
         self.current_transactions = [] #this list serves as the memory pool (mempool) for each node
 
+        self.past_transactions = dict({}) #keeps a dictionary withpast transaction id's as keys. I am using a dictionary for the sake of efficency since dict search has O(N) (constant) complexity
+
         #Create genesis block
 
         self.username = ""
@@ -229,6 +231,10 @@ class BlockChain:
         #reset the current list of transactions, as the transactions have now been stored in the block (check that the transaction list in the block doesn't point to the same data as the variable that I'm now resetting)
         self.current_transactions = []
 
+        # for c_t in self.current_transactions:
+        #     self.past_transactions[c_t["transaction_id"]] = 1
+        print(f"{self.past_transactions=}")
+
         self.chain.append(block)
 
         self.save_chain()
@@ -309,7 +315,7 @@ def mine():
     
     blockchain.new_transaction(
         sender = "0",
-        recipient = node_identifier,
+        recipient = node_identifier,    #TODO: Maybe change this recipient identifier to the node's IP address
         amount = 1,
         transaction_id = str(uuid4()).replace("-", "")
     )
@@ -520,23 +526,36 @@ def propagate():
             "values": values
                     }
 
+    past_transaction_test = ""
+
     if values_dict not in blockchain.current_transactions:
         
-        blockchain.new_transaction(values_dict['sender'], values_dict['recipient'], values_dict['amount'], values_dict['transaction_id'])
-
         
-        print("======ENTERING FOR LOOP======")
-        print(f"{blockchain.nodes=}")
-        for node in blockchain.nodes:
-                try:
-                    node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
-                    print(f">>>>>> {node_response.json()=}")
-                except:
-                    print(f"{node} is unavailable")
+        try:
+            
+            past_transaction_test = blockchain.past_transactions[values_dict['transaction_id']]
+        
+        except KeyError:
+            blockchain.past_transactions[values_dict["transaction_id"]] = 1
+            print(f"\n\n\n----->{blockchain.past_transactions=}\n\n\n")
+
+            blockchain.new_transaction(values_dict['sender'], values_dict['recipient'], values_dict['amount'], values_dict['transaction_id'])
+
+            
+            print("======ENTERING FOR LOOP======")
+            print(f"{blockchain.nodes=}")
+            for node in blockchain.nodes:
+                    try:
+                        node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
+                        print(f">>>>>> {node_response.json()=}")
+                    except:
+                        print(f"{node} is unavailable")
+
+            mine()
     else:
         pass
 
-    # mine()
+    # mine() #this function call is in the wrong place (it should be in the if-else statement)
     
     return jsonify(response), 200
 
