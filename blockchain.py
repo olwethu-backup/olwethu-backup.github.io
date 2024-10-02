@@ -151,6 +151,10 @@ class BlockChain:
 
         for node in neighbours:
             try:
+
+                for i in range(10):
+                    print(i*"*")
+                    
                 response = requests.get(f"http://{node}/chain") #is there a way to use https to ensure that packets are encrypted as they are sent and received?
 
                 if response.status_code == 200:
@@ -314,9 +318,16 @@ def mine():
     #We must be rewarded for finding the proof. (New unit of cryptocurrency is created to reward the miner)
     #The sender is "0" to signify that this node has mined a new coin.
     
+    # blockchain.new_transaction(
+    #     sender = "0",
+    #     recipient = node_identifier,    #TODO: Maybe change this recipient identifier to the node's IP address
+    #     amount = 1,
+    #     transaction_id = str(uuid4()).replace("-", "")
+    # )
+    
     blockchain.new_transaction(
         sender = "0",
-        recipient = node_identifier,    #TODO: Maybe change this recipient identifier to the node's IP address
+        recipient = "127.0.0.1:" + str(blockchain.port),    #TODO: Maybe change this recipient identifier to the node's IP address
         amount = 1,
         transaction_id = str(uuid4()).replace("-", "")
     )
