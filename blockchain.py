@@ -150,20 +150,21 @@ class BlockChain:
         #Get the chains of all the nodes in our network and verify them
 
         for node in neighbours:
+            try:
+                response = requests.get(f"http://{node}/chain") #is there a way to use https to ensure that packets are encrypted as they are sent and received?
 
-            response = requests.get(f"http://{node}/chain") #is there a way to use https to ensure that packets are encrypted as they are sent and received?
+                if response.status_code == 200:
 
-            if response.status_code == 200:
+                    length = response.json()['length']
+                    chain = response.json()['chain']
 
-                length = response.json()['length']
-                chain = response.json()['chain']
+                    # Check if the length is longer and the chain is valid
 
-                # Check if the length is longer and the chain is valid
-
-                if length > max_length and self.valid_chain(chain):
-                    max_length = length
-                    new_chain = chain
-
+                    if length > max_length and self.valid_chain(chain):
+                        max_length = length
+                        new_chain = chain
+            except ConnectionError:
+                print(f"{node} is unavailable")
         #Replace our chain if we discover a new valid chain that's longer than our chain
 
         if new_chain:
@@ -400,6 +401,7 @@ def save_chain():
 
 @app.route('/nodes/resolve', methods=['GET'])
 def consensus():
+    print("\n\n\n\n\nCONSENSUS\n\n")
 
     replaced = blockchain.resolve_conflicts() #returns True if chain has been replaced, False otherwise
 
@@ -408,6 +410,7 @@ def consensus():
             'message': 'Our chain was replaced',
             'new_chain': blockchain.chain
         }
+        print('Our chain was replaced')
         blockchain.save_chain()
 
     else:
@@ -415,6 +418,7 @@ def consensus():
             'message': 'Our chain is authoritative',
             'chain': blockchain.chain
         }
+        print('Our chain is authoritative')
     
     return jsonify(response), 200
 
@@ -552,6 +556,7 @@ def propagate():
                         print(f"{node} is unavailable")
 
             mine()
+            consensus()
     else:
         pass
 
