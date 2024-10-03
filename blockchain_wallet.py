@@ -37,6 +37,83 @@ class Wallet:
         
         else:
             return f"Requested amount ({amount}) exceeds available balance ({address})."
+    
+    def read_chain(self, chain):
+
+        transaction_address = "127.0.0.1:" + str(self.port)
+
+        print(f"{transaction_address=}")
+
+        for block in chain:
+            
+            for transaction in block["transactions"]:
+                
+                print(f"{transaction['sender']=}")
+                print(f"{transaction['recipient']=}")
+                if transaction["sender"] == transaction_address:
+
+                   
+
+                    self.available -= float(transaction["amount"])
+                    print("sender")
+                    print(f"{float(transaction['amount'])=}")
+                    print(self.available)
+                    print(".................")
+                
+                if transaction["recipient"] == transaction_address:
+                    
+                    self.available += float(transaction["amount"])
+
+                    print("recipient")
+                    print(f"{float(transaction['amount'])=}")
+                    print(self.available)
+                    print(".................")
+        
+
+
+                
+
+
+
+    def update_balance(self):
+
+        for node in self.nodes:
+
+            try:
+
+                response = requests.get(f"http://{node}/chain")
+
+                if response.status_code == 200:
+                    length = response.json()['length']
+                    chain = response.json()['chain']
+
+                    print("chain=")
+                    for c in chain:
+                        print(c)
+
+                    self.read_chain(chain)
+
+                    self.total = self.available + self.pending
+                
+                break
+
+            except:
+
+                print(f"{node} is unavailable")
+
+                continue
+        
+        wallets_dict = json.load(open("wallets.json", "r"))
+
+        wallets_dict[self.username]["available balance"] = self.available
+        wallets_dict[self.username]["pending balance"] = self.pending
+        wallets_dict[self.username]["total balance"] = self.total
+        
+        wallets_dump = json.dumps(wallets_dict)
+        wallets_file = open("wallets.json", "w")
+        wallets_file.write(wallets_dump)
+        wallets_file.close()
+
 
 
 #Instantiating a wallet with an API endpoint
@@ -129,6 +206,10 @@ def register():
 
 @app.route("/send", methods = ["POST"])
 def send():
+
+    wallet.update_balance()
+    print(f"{wallet.available=}")
+
     values = request.get_json()
 
     print(f"{values=}")
@@ -208,6 +289,9 @@ def login():
 
     print(f"{wallet.username=}")
     
+    # wallet.update_balance()
+    # print(f"{wallet.available=}")
+
     wallet.address = wallet_dict[username]["address"]
     wallet.available = wallet_dict[username]["available balance"]
     wallet.pending = wallet_dict[username]["pending balance"]
@@ -299,6 +383,9 @@ def login_offline():
    
         print("Error: Incorrect username or password")
         return -1
+
+    # wallet.update_balance()
+    # print(f"{wallet.available=}")
 
     wallet.username = username
     wallet.port = wallet_dict[username]["port"]

@@ -46,6 +46,7 @@ class BlockChain:
 
         #code for consensus with other nodes
         self.nodes = set()
+        
 
       
 
@@ -115,9 +116,9 @@ class BlockChain:
 
             block = chain[current_index]
 
-            print(f"{prev_block}")
-            print(f"{block}")
-            print("\n-----------\n")
+            # print(f"{prev_block}")
+            # print(f"{block}")
+            # print("\n-----------\n")
             #Check that the hash of the block is correct
 
             if block['previous_hash'] != self.hash(prev_block):
@@ -156,17 +157,33 @@ class BlockChain:
                     print(i*"*")
                     
                 response = requests.get(f"http://{node}/chain") #is there a way to use https to ensure that packets are encrypted as they are sent and received?
-
+                print(f'======\n{node}\n======')
                 if response.status_code == 200:
 
                     length = response.json()['length']
                     chain = response.json()['chain']
 
-                    # Check if the length is longer and the chain is valid
+                    print(f"{length=}")
+                    print(f'{len(self.chain)=}')
+                    print(f"{max_length=}")
 
-                    if length > max_length and self.valid_chain(chain):
+                    # Check if the length is longer and the chain is valid
+                    chain_valid = self.valid_chain(chain)
+                    if length > max_length and chain_valid:
                         max_length = length
                         new_chain = chain
+
+                    else:
+
+                        if length <= max_length:
+                            print("\n\n\n\n")
+                            print("length <= max_length")
+                            print("\n\n\n\n")
+                            
+                        if not chain_valid:
+                            print("\n\n\n\n")
+                            print(f"{chain_valid=}")
+                            print("\n\n\n\n")
             except ConnectionError:
                 print(f"{node} is unavailable")
         #Replace our chain if we discover a new valid chain that's longer than our chain
@@ -327,7 +344,7 @@ def mine():
     
     blockchain.new_transaction(
         sender = "0",
-        recipient = "127.0.0.1:" + str(blockchain.port),    #TODO: Maybe change this recipient identifier to the node's IP address
+        recipient = "127.0.0.1:" + str(blockchain.port + 2),    #TODO: Maybe change this recipient identifier to the node's wallet's IP address
         amount = 1,
         transaction_id = str(uuid4()).replace("-", "")
     )
@@ -375,6 +392,9 @@ def full_chain():
         'chain':blockchain.chain,
         'length':len(blockchain.chain),
     }
+    print(">>>>>>>>")
+    print([{i: blockchain.chain[i]["previous_hash"]} for i in range(len(blockchain.chain))])
+    print(">>>>>>>>")
     
     return jsonify(response), 200
 
@@ -545,17 +565,17 @@ def propagate():
 
     if values_dict not in blockchain.current_transactions:
         
-        
-        try:
-            
-            past_transaction_test = blockchain.past_transactions[values_dict['transaction_id']]
-        
-        except KeyError:
+        if values_dict['transaction_id'] in blockchain.past_transactions:
+            print(f'{(values_dict['transaction_id'] in blockchain.past_transactions)=}')
+            # past_transaction_test = blockchain.past_transactions[values_dict['transaction_id']]
+            pass
+
+        else:
             blockchain.past_transactions[values_dict["transaction_id"]] = 1
             print(f"\n\n\n----->{blockchain.past_transactions=}\n\n\n")
 
             blockchain.new_transaction(values_dict['sender'], values_dict['recipient'], values_dict['amount'], values_dict['transaction_id'])
-
+            
             
             print("======ENTERING FOR LOOP======")
             print(f"{blockchain.nodes=}")
@@ -563,7 +583,7 @@ def propagate():
                     try:
                         node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
                         print(f">>>>>> {node_response.json()=}")
-                    except:
+                    except ConnectionError:
                         print(f"{node} is unavailable")
 
             mine()
