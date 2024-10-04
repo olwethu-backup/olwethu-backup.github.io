@@ -233,7 +233,9 @@ class BlockChain:
         guess = f'{last_proof}{proof}'.encode()
         guess_hash_digest  = hashlib.sha256(guess).hexdigest()
 
-        return guess_hash_digest[:4] == "0000"
+        difficulty = 5
+
+        return guess_hash_digest[:difficulty] == difficulty*"0"
         
 
     

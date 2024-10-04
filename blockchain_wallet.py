@@ -44,6 +44,8 @@ class Wallet:
 
         print(f"{transaction_address=}")
 
+        available = 0
+
         for block in chain:
             
             for transaction in block["transactions"]:
@@ -54,20 +56,22 @@ class Wallet:
 
                    
 
-                    self.available -= float(transaction["amount"])
+                    available -= float(transaction["amount"])
                     print("sender")
                     print(f"{float(transaction['amount'])=}")
-                    print(self.available)
+                    print(f"{available=}")
                     print(".................")
                 
                 if transaction["recipient"] == transaction_address:
                     
-                    self.available += float(transaction["amount"])
+                    available += float(transaction["amount"])
 
                     print("recipient")
                     print(f"{float(transaction['amount'])=}")
-                    print(self.available)
+                    print(f"{available=}")
                     print(".................")
+
+        self.available = available
         
 
 
