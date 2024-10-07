@@ -1,4 +1,9 @@
-from time import time
+from gevent import monkey
+monkey.patch_all() #TODO: Figure out what this does and why it works so beautifully
+
+
+# import grequests
+from time import time, sleep
 import json
 import hashlib
 from uuid import uuid4
@@ -6,7 +11,10 @@ from uuid import uuid4
 from flask import Flask, jsonify, request
 from urllib.parse import urlparse
 
-import requests
+
+# import requests
+import grequests
+
 import blockchain_wallet
 import subprocess
 
@@ -149,14 +157,17 @@ class BlockChain:
         max_length = len(self.chain)
 
         #Get the chains of all the nodes in our network and verify them
-
+        
         for node in neighbours:
             try:
 
                 for i in range(10):
                     print(i*"*")
                     
-                response = requests.get(f"http://{node}/chain") #is there a way to use https to ensure that packets are encrypted as they are sent and received?
+                rs = [grequests.get(f"http://{node}/chain")] #is there a way to use https to ensure that packets are encrypted as they are sent and received?
+                responses = grequests.map(rs)
+                response = responses[0]
+                
                 print(f'======\n{node}\n======')
                 if response.status_code == 200:
 
@@ -185,7 +196,7 @@ class BlockChain:
                             print(f"{chain_valid=}")
                             print("\n\n\n\n")
             except ConnectionError:
-                print(f"{node} is unavailable")
+                print(f"{node} is unavailable [blockchain.resolve_conflicts()]")
         #Replace our chain if we discover a new valid chain that's longer than our chain
 
         if new_chain:
@@ -511,8 +522,10 @@ def register_account():
         # print("99999999999")        
         # # print(f"{json_data=}")
 
-
-        wallet_response_data = requests.post(url = blockchain.wallet_address + "/wallets/register", json = json_data)
+        rs = [grequests.post(url = blockchain.wallet_address + "/wallets/register", json = json_data)]
+        responses = grequests.map(rs)
+        wallet_response_data = responses[0]
+        # wallet_response_data = requests.post(url = blockchain.wallet_address + "/wallets/register", json = json_data)
 
         # print("101010101010101010")
         # print(f"{wallet_response_data=}")
@@ -581,12 +594,23 @@ def propagate():
             
             print("======ENTERING FOR LOOP======")
             print(f"{blockchain.nodes=}")
-            for node in blockchain.nodes:
-                    try:
-                        node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
-                        print(f">>>>>> {node_response.json()=}")
-                    except ConnectionError:
-                        print(f"{node} is unavailable")
+
+            # node_addresses = ["http://" + node + "/propagate" for node in blockchain.nodes]
+            # node_responses = [grequests.get(url = "http://" + node + "/propagate", params = values_dict) for node in blockchain.nodes]
+
+            # grequests.map(node_responses)
+
+            rs = [grequests.get(url = "http://" + node + "/propagate", params = values_dict) for node in blockchain.nodes]
+            responses = grequests.map(rs)
+            print(f'{responses=}')
+
+
+            # for node in blockchain.nodes:
+            #         try:
+            #             node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
+            #             print(f">>>>>> {node_response.json()=}")
+            #         except ConnectionError:
+            #             print(f"{node} is unavailable")
 
             mine()
             consensus()
@@ -594,7 +618,8 @@ def propagate():
         pass
 
     # mine() #this function call is in the wrong place (it should be in the if-else statement)
-    
+    # for i in range(10):
+    #     print(i*"?")
     return jsonify(response), 200
 
 
@@ -639,7 +664,15 @@ def login():
 
     print(f"{blockchain.port=}")
     
-    response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
+    rs = [grequests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"})]
+    responses = grequests.map(rs)
+    response = responses[0]
+
+    
+    # response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
+    
+    
+    
     # print(f"{response=}")
     response, status_code = response.json(), response.status_code
     
@@ -662,59 +695,90 @@ def login():
 
 def login_offline(username = "", password = ""):
 
-    
+    print("--------------1")
     if (username == "") or (password == ""):
         # print(">>>>>>>>><<<<<<<<<<<<<")
         username = input("username: ")
         password = sha256(input("password: ").encode()).hexdigest()
 
+    print("--------------2")
     node_dict = json.load(open("nodes.json", "r"))
 
-
+    print("--------------3")
     if username not in node_dict:
         # print("----------->")
         print("Error: Incorrect username or password")
         return -1
     
+    print("--------------4")
     if node_dict[username]["password"] != password:
         # print("<-----------")
         print("Error: Incorrect username or password")
         return -1
-       
+    
+    print("--------------5")
     blockchain.address = node_dict[username]["address"]
     blockchain.nodes = node_dict[username]["nodes"]
     blockchain.username = username
     blockchain.port = node_dict[username]["port"]
+    
+    p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : blockchain.port + 1, "subprocess" : True})
+    p1.start()
+    blockchain.wallet_address = "http://localhost:" + str(blockchain.port + 1) #all transactions to and from this node will use this wallet port
     blockchain.chain = node_dict[username]["chain"]
     
+    print("--------------6")
     if len(blockchain.chain) == 0:
         blockchain.new_block(previous_hash=1, proof=100)
 
-    p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : blockchain.port + 1, "subprocess" : True})
+    print("--------------7")
+    
 
     print(f"{blockchain.port=}")
 
-    blockchain.wallet_address = "http://localhost:" + str(blockchain.port + 1) #all transactions to and from this node will use this wallet port
-
-    p1.start()
+    print("--------------8")
+    
+    print("--------------8.1")
+    
+    print("--------------8.2")
 
     print(f">=======\n\n\n\n{blockchain.wallet_address}\n\n\n\n=======<")
+    print("--------------8.3")
     print("--------------------------------------------------")
-    response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
+    print("--------------8.4")
+    rs = [grequests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"})]
+    print("====sleeping...")
+    sleep(12)
+    print("====waking up...")
+    # grequests.map(rs)
+    print(f'{rs=}')
+    print("--------------8.5")
+    responses = grequests.map(rs)
+    print(f"{responses=}")
+    print("--------------8.6")
+    response = responses[0]
+    print(f"{responses[0].__dict__=}")
+    print("--------------9")
+    
     print(":::::::::::::::::::::::::::::::::::::::::::::::::")
     response, status_code = response.json(), response.status_code
     print("--------------------------->")
+
     print(f"{response=}")
     print(f"{status_code=}")
 
-
+    print("--------------10")
     
     if status_code != 200:
         print("Login unsuccessful")
         return "Error"
 
+    print("--------------11")
     
     print("Login successful")
+
+    print("--------------12")
+
     return blockchain.port
 
 

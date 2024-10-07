@@ -24,7 +24,7 @@ def main():
         # print(f"{process=}")
         process.start()
         print(f"{process=}")
-        time.sleep(10)
+        time.sleep(20)
 
 if __name__ == "__main__":
     main()

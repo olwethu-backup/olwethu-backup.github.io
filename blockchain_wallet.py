@@ -1,9 +1,13 @@
+from gevent import monkey
+monkey.patch_all() #TODO: Figure out what this does and why it works so beautifully
+
 # from blockchain import BlockChain
 from uuid import uuid4
 from flask import Flask, jsonify, request
-import requests
+import grequests
 import json
 from hashlib import sha256
+import time
 
 
 class Wallet:
@@ -84,8 +88,10 @@ class Wallet:
         for node in self.nodes:
 
             try:
+                rs = [grequests.get(f"http://{node}/chain")]
+                responses = grequests.map(rs)
 
-                response = requests.get(f"http://{node}/chain")
+                response = responses[0]
 
                 if response.status_code == 200:
                     length = response.json()['length']
@@ -103,7 +109,7 @@ class Wallet:
 
             except:
 
-                print(f"{node} is unavailable")
+                print(f"{node} is unavailable [wallet.update_balance()]")
 
                 continue
         
@@ -230,15 +236,27 @@ def send():
     }
     
     print(f"{wallet.nodes=}")
+    
 
-    for i in wallet.nodes:
+    rs = [grequests.get(url = "http://" + i + "/propagate", params = values_dict) for i in wallet.nodes]
+    # print(f"{rs=}")
+    # print("[sleeping] (/propagate)")
+    # time.sleep(12)
+    # print("[waking up] (/propagate)")
 
-        try:
-            node_response = requests.get(url = "http://" + i + "/propagate", params = values_dict)
-            print(f"{node_response.json()=}")
-        except:
-            print(f"{i} is unavailable")
-            pass
+    node_responses = grequests.map(rs)
+
+    print(f"{node_responses=}")
+    
+
+    # for i in wallet.nodes:
+
+    #     try:
+    #         node_response = requests.get(url = "http://" + i + "/propagate", params = values_dict)
+    #         print(f"{node_response.json()=}")
+    #     except:
+    #         print(f"{i} is unavailable")
+    #         pass
 
 
     return response, 200
@@ -252,7 +270,7 @@ def login():
     # request.__dict__
     values = request
 
-    #print(f"{type(values)=}")
+    print(f"{type(values)=}")
     if values.query_string == b'':  #this means that the GET request is sending JSON instead of a query string
         values = request.get_json()
         username = values.get("username")
@@ -260,7 +278,7 @@ def login():
         password = sha256(values.get("password").encode()).hexdigest()
     
     else: #if it gets to this stage, it means that the request's content was not written in JSON
-        #print("-------------------------handling exception")
+        print("-------------------------handling exception")
         values = request.url.split("?")[1].split("&")
         # R = values.split("?")[1].split("&")
         # print(f"{R=}")
@@ -279,14 +297,14 @@ def login():
     wallet_dict = json.load(open("wallets.json", "r"))
     
     if username not in wallet_dict:
-        #print(">>>")
+        print(">>>")
         return "Error: Incorrect username or password", 400
     
     if wallet_dict[username]["password"] != password:
-        #print("<<<")
-        #print(f"{wallet_dict[username]["password"]=}")
-        #print(f"{password=}")
-        #print(f"{sha256(password.encode()).hexdigest()=}")
+        print("<<<")
+        print(f"{wallet_dict[username]["password"]=}")
+        print(f"{password=}")
+        print(f"{sha256(password.encode()).hexdigest()=}")
         return "Error: Incorrect username or password", 400
    
     wallet.username = username
