@@ -1,5 +1,7 @@
 import socket
 
+import json
+
 
 
 def listener(port):
@@ -24,14 +26,38 @@ def listener(port):
         print(f"Got connection from {client_address}")
 
         request = client_connection.recv(1024).decode()
-        print(request)
+        print(f"{request=}")
 
-        response = "HTTP/1.0 200 OK\n\nThank you for connecting!"
+        request_split = request.split('\r\n\r\n')
+
+        print(f"{request_split=}")
+
+        print("\n\n")
+
+        for i in request_split:
+            print(i)
+            print("-----------------------------------------")
+
+        block_string = request_split[1]
+
+        print(f"{block_string=}")
+        print("===========================")
+
+
+        block_dict = json.loads(block_string)    
+
+
+        print(f"{block_dict=}")
+        print("===========================")
+
+
+
+        response = f"HTTP/1.0 200 OK\n\nThank you for connecting!"
         client_connection.sendall(response.encode())
 
         client_connection.close()
 
-        break
+        # break
     
     s.close()
 

@@ -40,6 +40,10 @@ from hashlib import sha256
 #    'previous_hash': "75647dfaf7asd647as67asf4dsas5a7f64d7as6fsa7d"
 # }
 
+
+broadcasted_block = False
+listener_port_offset = 5000
+
 class BlockChain:
     def __init__ (self):
         self.chain = []
@@ -80,6 +84,20 @@ class BlockChain:
         chain = nodes_dict[self.username]["chain"]
 
         return chain
+
+    def broadcast_block(self, block):
+        urls = [f"http://{node[:node.index(":")] + ":" + str(self.port + listener_port_offset)}" for node in self.nodes]
+
+        # print(f"\n\n\n\n\n{urls=}\n\n\n\n\n")
+
+        rs = [grequests.post(url = url, json = block) for url in urls]
+
+        responses = grequests.map(rs)
+
+        # print(f"\n\n\n\n\nbroadcast responses = {[r.__dict__ for r in responses]}\n\n\n\n\n")
+        
+        print(f"\n\n\n\n\nbroadcast responses = {responses}\n\n\n\n\n")
+        
 
     
 
@@ -328,6 +346,8 @@ class BlockChain:
         return self.chain[-1]
     
 
+
+
 #Instantiating a node with a blockchain API endpoint
 
 app = Flask(__name__)
@@ -338,6 +358,55 @@ node_identifier = str(uuid4()).replace('-','')
 
 # Instantiate the BlockChain
 blockchain = BlockChain()
+
+
+def listen_for_broadcasts(port):
+    print(f"{port=}")
+
+    node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    node_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    print("Socket successfully created")
+
+    node_socket.bind(("", port))
+
+    print(f"socket bound to {port}")
+
+    max_connections = 20
+    node_socket.listen(max_connections)
+
+    print(f"socket is listening (max connections = {max_connections})")
+
+    while True:
+        client_connection, client_address = node_socket.accept()
+
+        print(f"Got connection from {client_address}")
+
+        request = client_connection.recv(1024).decode()
+
+        print(f"\n]\n\n]\n\n]\n\n]\n\n]\n{request=}\n]\n\n]\n\n]\n\n]\n\n]\n")
+
+        request_split = request.split('\r\n\r\n')
+        
+        block_string = request_split[1]
+
+        block_dict = json.loads(block_string)
+
+        print(f"\n+\n\n+\n\n+\n\n+\n\n+\n{block_dict=}\n+\n\n+\n\n+\n\n+\n\n+\n")
+
+        for i in range(10):
+            print(i*"()")
+
+
+
+        response = f"HTTP/1.0 200 OK\n\nBlock received."
+
+        client_connection.sendall(response.encode())
+        
+        client_connection.close()
+    
+    node_socket.close()
+
 
 @app.route('/mine', methods = ['GET'])
 def mine():
@@ -370,6 +439,8 @@ def mine():
     previous_hash = blockchain.hash(last_block)
     block = blockchain.new_block(proof, previous_hash)
 
+    print(f"\n\n\n\n\n\n\n{block=}\n\n\n\n\n\n\n\n")
+
     response = {
         "message": "New Block Forged",
         "index": block["index"],
@@ -379,6 +450,9 @@ def mine():
     }
 
     blockchain.save_chain()
+
+    blockchain.broadcast_block(block)
+
     return jsonify(response), 200
 
 @app.route('/transactions/new', methods=['POST'])
@@ -661,6 +735,10 @@ def login():
     blockchain.port = node_dict[username]["port"]
     blockchain.chain = node_dict[username]["chain"]
 
+    
+    broadcast_listener_thread = threading.Thread(target = listen_for_broadcasts, args = (blockchain.port + listener_port_offset, ))
+    broadcast_listener_thread.start()
+    
     # if len(blockchain.chain) == 0:
     #     mine()
 
@@ -729,6 +807,9 @@ def login_offline(username = "", password = ""):
     p1.start()
     blockchain.wallet_address = "http://localhost:" + str(blockchain.port + 1) #all transactions to and from this node will use this wallet port
     blockchain.chain = node_dict[username]["chain"]
+
+    broadcast_listener_thread = threading.Thread(target = listen_for_broadcasts, args = (blockchain.port + listener_port_offset, ))
+    broadcast_listener_thread.start()
     
     print("--------------6")
     if len(blockchain.chain) == 0:
