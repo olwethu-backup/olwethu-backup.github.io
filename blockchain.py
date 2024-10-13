@@ -41,7 +41,7 @@ from hashlib import sha256
 # }
 
 
-broadcasted_block = False
+
 listener_port_offset = 5000
 
 class BlockChain:
@@ -57,10 +57,13 @@ class BlockChain:
         self.wallet_address = ""
         self.port = -1
 
+        self.received_blocks = []
         
 
         #code for consensus with other nodes
         self.nodes = set()
+
+        self.broadcasted_block = threading.Event()
         
 
       
@@ -86,9 +89,20 @@ class BlockChain:
         return chain
 
     def broadcast_block(self, block):
-        urls = [f"http://{node[:node.index(":")] + ":" + str(self.port + listener_port_offset)}" for node in self.nodes]
+
+        for i in range(20):
+            print(i*"[]")
+        
+        print(f"{self.nodes=}")
+
+        urls = [f"http://{node[:node.index(":")] + ":" + str(int(node[node.index(":") + 1:]) + listener_port_offset)}" for node in self.nodes]
 
         # print(f"\n\n\n\n\n{urls=}\n\n\n\n\n")
+        
+        for i in range(20):
+            print(i*"<>")
+
+        print(f"{urls=}")
 
         rs = [grequests.post(url = url, json = block) for url in urls]
 
@@ -97,6 +111,9 @@ class BlockChain:
         # print(f"\n\n\n\n\nbroadcast responses = {[r.__dict__ for r in responses]}\n\n\n\n\n")
         
         print(f"\n\n\n\n\nbroadcast responses = {responses}\n\n\n\n\n")
+
+
+        print(100*"\n")
         
 
     
@@ -243,9 +260,36 @@ class BlockChain:
         """
         
         proof = 0
+
+        for i in range(28):
+                    print(i*"_-")
+        
+        print("proof of work")
         
         while self.valid_proof(last_proof, proof) is False:
+
+            if self.broadcasted_block.is_set():
+                for i in range(28):
+                    print(i*"&")
+                print(f"RECEIVED BROADCASTED BLOCKS (port: {self.port})")
+                self.broadcasted_block = threading.Event()
+
+                print(f"{self.broadcasted_block=}")
+                
+                break
+
             proof += 1
+
+            sleep(0) #relinquishes control over CPU so that listener thread can interrupt the mining if necessary
+
+        
+        for i in range(28):
+                    print(i*"v^")
+
+        print("proof of work complete")
+       
+        
+        
 
         # while sha256(f'{p*last_proof}'.encode()).hexdigest()[:4] != "0000":
         #     p += 1
@@ -270,7 +314,7 @@ class BlockChain:
         return guess_hash_digest[:difficulty] == difficulty*"0"
         
 
-    
+        #["127.0.0.1:5042", "127.0.0.1:5046", "127.0.0.1:5050", "127.0.0.1:5054", "127.0.0.1:5058", "127.0.0.1:5062"]
     def new_block(self, proof, previous_hash=None):
 
         #New block created and appended to the blockchain
@@ -396,7 +440,14 @@ def listen_for_broadcasts(port):
 
         for i in range(10):
             print(i*"()")
+        
+        blockchain.broadcasted_block.set()
+        blockchain.received_blocks.append(block_dict)
 
+
+        print(f'\n=\n=\n=\n=\n=\n{blockchain.broadcasted_block=}\n=\n=\n=\n=\n=\n')
+
+        print(f'\n>\n>\n>\n>\n>\n{blockchain.received_blocks=}\n>\n>\n>\n>\n>\n')
 
 
         response = f"HTTP/1.0 200 OK\n\nBlock received."
@@ -737,6 +788,7 @@ def login():
 
     
     broadcast_listener_thread = threading.Thread(target = listen_for_broadcasts, args = (blockchain.port + listener_port_offset, ))
+    broadcast_listener_thread.daemon = True
     broadcast_listener_thread.start()
     
     # if len(blockchain.chain) == 0:
@@ -809,6 +861,7 @@ def login_offline(username = "", password = ""):
     blockchain.chain = node_dict[username]["chain"]
 
     broadcast_listener_thread = threading.Thread(target = listen_for_broadcasts, args = (blockchain.port + listener_port_offset, ))
+    broadcast_listener_thread.daemon = True
     broadcast_listener_thread.start()
     
     print("--------------6")
