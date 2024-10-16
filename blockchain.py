@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 import threading
 import socket
 
+import os
 
 # import requests
 import grequests
@@ -58,6 +59,8 @@ class BlockChain:
         self.port = -1
 
         self.received_blocks = []
+
+        self.num_proofs = 0
         
 
         #code for consensus with other nodes
@@ -65,26 +68,38 @@ class BlockChain:
 
         self.broadcasted_block = threading.Event()
         
+ 
+    def create_node_file(self, username):
 
-      
+        node_file = open(f"{username}_node.json", "w")
+
+        node_dict = dict({})
+
+        node_dump = json.dumps(node_dict)
+        
+        node_file.write(node_dump)
+    
+        node_file.close() 
+    
+    
 
     def save_chain(self):
-        nodes_dict = json.load(open("nodes.json", "r"))
+        nodes_dict = json.load(open(f"{self.username}_node.json", "r"))
         print(f"{self.username=}")
-        nodes_dict[self.username]["chain"] = list(self.chain)
+        nodes_dict["chain"] = list(self.chain)
 
         nodes_json = json.dumps(nodes_dict)
 
-        nodes_file = open("nodes.json", "w")
+        nodes_file = open(f"{self.username}_node.json", "w")
 
         nodes_file.write(nodes_json)
 
         nodes_file.close()
 
     def load_chain(self):
-        nodes_dict = json.load(open("nodes.json", "r"))
+        nodes_dict = json.load(open(f"{self.username}_node.json", "r"))
 
-        chain = nodes_dict[self.username]["chain"]
+        chain = nodes_dict["chain"]
 
         return chain
 
@@ -132,15 +147,15 @@ class BlockChain:
         parsed_url = urlparse(address)
         self.nodes.add(parsed_url.netloc)
 
-        node_dict = json.load(open("nodes.json", "r"))
+        node_dict = json.load(open(f"{self.username}_node.json", "r"))
 
-        node_dict[self.username]["nodes"] = list(self.nodes)
+        node_dict["nodes"] = list(self.nodes)
 
 
         
        
         node_json = json.dumps(node_dict)
-        node_file = open("nodes.json", "w")
+        node_file = open(f"{self.username}_nodes.json", "w")
         node_file.write(node_json)
         node_file.close()
         
@@ -258,13 +273,17 @@ class BlockChain:
         :param last_proof: <int>
         :return: <int>
         """
-        
+        #TODO: Figure out why the nodes are mining an extra time after receiving broadcasted blocks
+        #TODO: Make sure that received blocks hash the previous block in the chain
+
+        self.num_proofs += 1
+
         proof = 0
 
         for i in range(28):
                     print(i*"_-")
         
-        print("proof of work")
+        print(f"starting proof of work ({self.port=}) ({self.num_proofs=}) ")
         
         while self.valid_proof(last_proof, proof) is False:
 
@@ -276,6 +295,28 @@ class BlockChain:
 
                 print(f"{self.broadcasted_block=}")
                 
+                print(f"-----Adding received blocks to chain (port: {self.port}) (len(self.received_blocks): {len(self.received_blocks)})")
+                
+                print("__________________________________________________________________")
+                print(f'\n_+\n_+\n_+\n_+\n_+\n{self.broadcasted_block=}\n_+\n_+\n_+\n_+\n_+\n')
+
+                print(f'\n|\n|\n|\n|\n|\n{self.received_blocks=}    {self.port=} \n|\n|\n|\n|\n|\n')
+
+                for i in range(len(self.received_blocks)):
+                    print(f"><><><{i}")
+
+                    if self.chain[-1]["index"] == self.received_blocks[i]["index"] - 1:
+                        self.chain.append(self.received_blocks[i])
+                        print("ADDING BLOCK TO CHAIN")
+                        print(f"{self.received_blocks[i]=}")
+
+                print("__________________________________________________________________")
+                
+                self.received_blocks = []
+                self.save_chain()
+                
+
+                return -1    
                 break
 
             proof += 1
@@ -315,6 +356,7 @@ class BlockChain:
         
 
         #["127.0.0.1:5042", "127.0.0.1:5046", "127.0.0.1:5050", "127.0.0.1:5054", "127.0.0.1:5058", "127.0.0.1:5062"]
+    
     def new_block(self, proof, previous_hash=None):
 
         #New block created and appended to the blockchain
@@ -436,6 +478,8 @@ def listen_for_broadcasts(port):
 
         block_dict = json.loads(block_string)
 
+        block_dict["previous_hash"] = blockchain.hash(blockchain.chain[-1])
+
         print(f"\n+\n\n+\n\n+\n\n+\n\n+\n{block_dict=}\n+\n\n+\n\n+\n\n+\n\n+\n")
 
         for i in range(10):
@@ -445,9 +489,9 @@ def listen_for_broadcasts(port):
         blockchain.received_blocks.append(block_dict)
 
 
-        print(f'\n=\n=\n=\n=\n=\n{blockchain.broadcasted_block=}\n=\n=\n=\n=\n=\n')
+        # print(f'\n=\n=\n=\n=\n=\n{blockchain.broadcasted_block=}\n=\n=\n=\n=\n=\n')
 
-        print(f'\n>\n>\n>\n>\n>\n{blockchain.received_blocks=}\n>\n>\n>\n>\n>\n')
+        # print(f'\n>\n>\n>\n>\n>\n{blockchain.received_blocks=}    {blockchain.port=} \n>\n>\n>\n>\n>\n')
 
 
         response = f"HTTP/1.0 200 OK\n\nBlock received."
@@ -488,21 +532,30 @@ def mine():
     #Forge the new Block by adding it to the chain
 
     previous_hash = blockchain.hash(last_block)
-    block = blockchain.new_block(proof, previous_hash)
 
-    print(f"\n\n\n\n\n\n\n{block=}\n\n\n\n\n\n\n\n")
+    response = {"message":"error"}
 
-    response = {
-        "message": "New Block Forged",
-        "index": block["index"],
-        "transactions": block["transactions"],
-        "proof": block["proof"],
-        "previous_hash": block["previous_hash"]
-    }
+    if proof > 0:   #if proof_of_work() returned the correct proof
+        block = blockchain.new_block(proof, previous_hash)
 
-    blockchain.save_chain()
+        print(f"\n\n\n\n\n\n\n{block=}\n\n\n\n\n\n\n\n")
 
-    blockchain.broadcast_block(block)
+        response = {
+            "message": "New Block Forged",
+            "index": block["index"],
+            "transactions": block["transactions"],
+            "proof": block["proof"],
+            "previous_hash": block["previous_hash"]
+        }
+
+        blockchain.save_chain()
+
+        blockchain.broadcast_block(block)
+    
+    else:
+        response = {
+            "message": "Failed to forge block"          
+        }
 
     return jsonify(response), 200
 
@@ -612,7 +665,9 @@ def register_account():
         "nodes":[]
         
     }
-        
+    
+    # blockchain.create_node_file(username)
+
     port_file = open("port_counter.txt", "r")
     port_data = int(port_file.read())
     print(f"{port_data=}")
@@ -627,12 +682,16 @@ def register_account():
     port_file.close()
     # print("444444444")
 
-    node_dict = json.load(open("nodes.json", "r"))
+    
     # print("5555555555")
-    if node_info["username"] in node_dict:
+    dir_list = os.listdir()
+
+    if f"{node_info['username']}_node.json" in dir_list:
 
         return "Error: A node with this username already exists", 400
 
+
+    
     if node_info["connected wallets"] == "":
         # print("7777777777")
         #if no connected wallet already exists, we create one
@@ -665,13 +724,15 @@ def register_account():
         
         node_info["connected wallets"] = wallet_info["username"]
 
-        
+    blockchain.create_node_file(username)
+
+    # node_dict = json.load(open(f"{username}_node.json", "r"))
 
 
-    node_dict[node_info["username"]] = {"address":node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"], "nodes":node_info["nodes"]}
+    node_dict = {"address":node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"], "nodes":node_info["nodes"]}
     node_json = json.dumps(node_dict)
 
-    node_file = open("nodes.json", "w")
+    node_file = open(f"{username}_node.json", "w")
 
     node_file.write(node_json)
 
@@ -769,22 +830,23 @@ def login():
     username = values.get("username")
     password = sha256(values.get("password").encode()).hexdigest()
 
-    node_dict = json.load(open("nodes.json", "r"))
+    dir_list = os.listdir()
 
-
-    if username not in node_dict:
+    if f"{username}_node.json" not in dir_list:
         # print("----------->")
         return "Error: Incorrect username or password", 400
-    
-    if node_dict[username]["password"] != password:
+
+    node_dict = json.load(open(f"{username}_node.json", "r"))
+
+    if node_dict["password"] != password:
         # print("<-----------")
         return "Error: Incorrect username or password", 400
     
-    blockchain.address = node_dict[username]["address"]
-    blockchain.nodes = node_dict[username]["nodes"]
+    blockchain.address = node_dict["address"]
+    blockchain.nodes = node_dict["nodes"]
     blockchain.username = username
-    blockchain.port = node_dict[username]["port"]
-    blockchain.chain = node_dict[username]["chain"]
+    blockchain.port = node_dict["port"]
+    blockchain.chain = node_dict["chain"]
 
     
     broadcast_listener_thread = threading.Thread(target = listen_for_broadcasts, args = (blockchain.port + listener_port_offset, ))
@@ -812,7 +874,10 @@ def login():
     if status_code != 200:
         return response, status_code
     
+
+    print(f"{len(blockchain.chain)=}")
     if len(blockchain.chain) == 0:
+
         blockchain.new_block(previous_hash=1, proof=100)
 
 
@@ -835,37 +900,48 @@ def login_offline(username = "", password = ""):
         password = sha256(input("password: ").encode()).hexdigest()
 
     print("--------------2")
-    node_dict = json.load(open("nodes.json", "r"))
+    # node_dict = json.load(open("nodes.json", "r"))
 
     print("--------------3")
-    if username not in node_dict:
+
+    dir_list = os.listdir()
+
+
+    if f"{username}_node.json" not in dir_list:
         # print("----------->")
         print("Error: Incorrect username or password")
         return -1
     
     print("--------------4")
-    if node_dict[username]["password"] != password:
+
+    node_dict = json.load(open(f"{username}_node.json", "r"))
+
+    if node_dict["password"] != password:
         # print("<-----------")
         print("Error: Incorrect username or password")
         return -1
     
     print("--------------5")
-    blockchain.address = node_dict[username]["address"]
-    blockchain.nodes = node_dict[username]["nodes"]
+    blockchain.address = node_dict["address"]
+    blockchain.nodes = node_dict["nodes"]
     blockchain.username = username
-    blockchain.port = node_dict[username]["port"]
+    blockchain.port = node_dict["port"]
     
     p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : blockchain.port + 1, "subprocess" : True})
     p1.start()
     blockchain.wallet_address = "http://localhost:" + str(blockchain.port + 1) #all transactions to and from this node will use this wallet port
-    blockchain.chain = node_dict[username]["chain"]
+    blockchain.chain = node_dict["chain"]
 
     broadcast_listener_thread = threading.Thread(target = listen_for_broadcasts, args = (blockchain.port + listener_port_offset, ))
     broadcast_listener_thread.daemon = True
     broadcast_listener_thread.start()
     
     print("--------------6")
+
+    print(f"{len(blockchain.chain)=}")
     if len(blockchain.chain) == 0:
+
+        print("mining new block for len == 0")
         blockchain.new_block(previous_hash=1, proof=100)
 
     print("--------------7")

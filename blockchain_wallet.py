@@ -9,6 +9,8 @@ import json
 from hashlib import sha256
 import time
 
+import os
+
 
 class Wallet:
 
@@ -24,6 +26,20 @@ class Wallet:
         self.nodes = set() #Set of nodes that can validate transactions
         self.port = -1
     
+
+    def create_wallet_file(self, username):
+
+
+        wallet_file = open(f"{username}_wallet.json", "w")
+       
+        wallet_dict = dict({})
+
+        wallet_dump = json.dumps(wallet_dict)
+        
+        wallet_file.write(wallet_dump)
+ 
+        wallet_file.close()
+
     def send(self, amount, address):
         #Creates a transaction that sends currency to a specific address.
         #The transaction will only be valid once it is on the chain as a block
@@ -113,14 +129,14 @@ class Wallet:
 
                 continue
         
-        wallets_dict = json.load(open("wallets.json", "r"))
+        wallets_dict = json.load(open(f"{self.username}_wallet.json", "r"))
 
-        wallets_dict[self.username]["available balance"] = self.available
-        wallets_dict[self.username]["pending balance"] = self.pending
-        wallets_dict[self.username]["total balance"] = self.total
+        wallets_dict["available balance"] = self.available
+        wallets_dict["pending balance"] = self.pending
+        wallets_dict["total balance"] = self.total
         
         wallets_dump = json.dumps(wallets_dict)
-        wallets_file = open("wallets.json", "w")
+        wallets_file = open(f"{self.username}_wallet.json", "w")
         wallets_file.write(wallets_dump)
         wallets_file.close()
 
@@ -177,27 +193,31 @@ def register():
         "pending balance": 0,
         "total balance": 0,
         "nodes": []
-
-
-
     }
     
     # print("sevensevensevensevensevenseven")
     
+    
+    
+    dir_list = os.listdir()
 
-    wallet_dict = json.load(open("wallets.json", "r"))
 
-    if wallet_info['username'] in wallet_dict:
+
+    # wallet_dict = json.load(open("wallets.json", "r"))
+
+    if f"{wallet_info['username']}_wallet.json" in dir_list:
         # print("eighteighteighteighteighteight")
         return "Error: A wallet with this username already exists", 400
     
     # print("nineninenineninenineninenineninenine")
 
-    wallet_dict[wallet_info['username']] = {"address": wallet_info['address'], "password": wallet_info['password'], "available balance": wallet_info["pending balance"], "pending balance": wallet_info["total balance"], "total balance": wallet_info["total balance"], "nodes": wallet_info["nodes"], "port": wallet_info["port"]}
+    wallet.create_wallet_file(username)
+    
+    wallet_dict = {"address": wallet_info['address'], "password": wallet_info['password'], "available balance": wallet_info["pending balance"], "pending balance": wallet_info["total balance"], "total balance": wallet_info["total balance"], "nodes": wallet_info["nodes"], "port": wallet_info["port"]}
     wallet_json = json.dumps(wallet_dict) #TODO: encrypt password (it's currently stored as plaintext)
 
 
-    wallet_file = open("wallets.json", "w")
+    wallet_file = open(f"{username}_wallet.json", "w")
 
     wallet_file.write(wallet_json)
 
@@ -294,15 +314,19 @@ def login():
     print("-----1.5-----")
     
     print("-----2-----")
-    wallet_dict = json.load(open("wallets.json", "r"))
+    # wallet_dict = json.load(open("wallets.json", "r"))
     
-    if username not in wallet_dict:
+    dir_list = os.listdir()
+
+    if f"{username}_wallet.json" not in dir_list:
         print(">>>")
         return "Error: Incorrect username or password", 400
     
-    if wallet_dict[username]["password"] != password:
+    wallet_dict = json.load(open(f"{username}_wallet.json", "r"))
+
+    if wallet_dict["password"] != password:
         print("<<<")
-        print(f"{wallet_dict[username]["password"]=}")
+        print(f"{wallet_dict["password"]=}")
         print(f"{password=}")
         print(f"{sha256(password.encode()).hexdigest()=}")
         return "Error: Incorrect username or password", 400
@@ -314,22 +338,22 @@ def login():
     # wallet.update_balance()
     # print(f"{wallet.available=}")
 
-    wallet.address = wallet_dict[username]["address"]
-    wallet.available = wallet_dict[username]["available balance"]
-    wallet.pending = wallet_dict[username]["pending balance"]
-    wallet.total = wallet_dict[username]["total balance"]
-    wallet.nodes = set(wallet_dict[username]["nodes"])
-    wallet.port = wallet_dict[username]["port"]
+    wallet.address = wallet_dict["address"]
+    wallet.available = wallet_dict["available balance"]
+    wallet.pending = wallet_dict["pending balance"]
+    wallet.total = wallet_dict["total balance"]
+    wallet.nodes = set(wallet_dict["nodes"])
+    wallet.port = wallet_dict["port"]
 
     print(f"=\n=\n=\n=\n=\n=\n{wallet.nodes=}=\n=\n=\n=\n=\n=\n")
 
     print("-----4-----")
     response = {"message": "Login successful",
                 "details": {
-                    "address": wallet_dict[username]["address"],
-                    "available balance" : wallet_dict[username]["available balance"],
-                    "pending balance" : wallet_dict[username]["pending balance"],
-                    "total balance" : wallet_dict[username]["total balance"]
+                    "address": wallet_dict["address"],
+                    "available balance" : wallet_dict["available balance"],
+                    "pending balance" : wallet_dict["pending balance"],
+                    "total balance" : wallet_dict["total balance"]
                 }}
     
     print("-----5-----")
@@ -349,14 +373,14 @@ def register_node():
     for address in nodes:
         wallet.nodes.add(address)
 
-    wallet_data = json.load(open("wallets.json", "r"))
+    wallet_data = json.load(open(f"{wallet.username}_wallet.json", "r"))
 
     
-    wallet_info = wallet_data[wallet.username]
+    wallet_info = wallet_data
 
-    wallet_data[wallet.username]["nodes"] = list(wallet.nodes)
+    wallet_data["nodes"] = list(wallet.nodes)
 
-    wallet_file = open("wallets.json", "w")
+    wallet_file = open(f"{wallet.username}_wallet.json", "w")
 
     wallet_dump = json.dumps(wallet_data)
 
@@ -394,14 +418,19 @@ def login_offline():
     
 
 
-    wallet_dict = json.load(open("wallets.json", "r"))
     
-    if username not in wallet_dict:
+
+    dir_list = os.listdir()
+
+    
+    if f"{username}_wallet.json" not in dir_list:
         
         print("Error: Incorrect username or password")
         return -1
     
-    if wallet_dict[username]["password"] != password:
+    wallet_dict = json.load(open(f"{username}_wallet.json", "r"))
+    
+    if wallet_dict["password"] != password:
    
         print("Error: Incorrect username or password")
         return -1
@@ -410,19 +439,19 @@ def login_offline():
     # print(f"{wallet.available=}")
 
     wallet.username = username
-    wallet.port = wallet_dict[username]["port"]
-    wallet.address = wallet_dict[username]["address"]
-    wallet.available = wallet_dict[username]["available balance"]
-    wallet.pending = wallet_dict[username]["pending balance"]
-    wallet.total = wallet_dict[username]["total balance"]
-    wallet.nodes = set(wallet_dict[username]["nodes"])
+    wallet.port = wallet_dict["port"]
+    wallet.address = wallet_dict["address"]
+    wallet.available = wallet_dict["available balance"]
+    wallet.pending = wallet_dict["pending balance"]
+    wallet.total = wallet_dict["total balance"]
+    wallet.nodes = set(wallet_dict["nodes"])
 
     print("Login successful")
     print("      details:" )
-    print(f"         address: {wallet_dict[username]["address"]}")
-    print(f"         available balance : {wallet_dict[username]["available balance"]}")
-    print(f"         pending balance : {wallet_dict[username]["pending balance"]}")
-    print(f"         total balance : {wallet_dict[username]["total balance"]}")
+    print(f"         address: {wallet_dict["address"]}")
+    print(f"         available balance : {wallet_dict["available balance"]}")
+    print(f"         pending balance : {wallet_dict["pending balance"]}")
+    print(f"         total balance : {wallet_dict["total balance"]}")
                 
     
 
