@@ -25,6 +25,7 @@ class Wallet:
         self.total = self.available + self.pending  #total balance
         self.nodes = set() #Set of nodes that can validate transactions
         self.port = -1
+        self.past_transactions = dict({})
     
 
     def create_wallet_file(self, username):
@@ -40,11 +41,36 @@ class Wallet:
  
         wallet_file.close()
 
+    def save_transaction(self, transaction):
+        wallet_dict = json.load(open(f"{self.username}_wallet.json", "r"))
+
+        past_transactions = wallet_dict["past_transactions"]
+
+        past_transactions[transaction["transaction_id"]] = transaction
+
+        wallet_dict["past_transactions"] = past_transactions
+
+        wallet_dict_dump = json.dumps(wallet_dict)
+
+        wallet_file = open(f"{self.username}_wallet.json", "w")
+        
+        wallet_file.write(wallet_dict_dump)
+
+        wallet_file.close()
+
+
+
+
+
+
+
+
     def send(self, amount, address):
         #Creates a transaction that sends currency to a specific address.
         #The transaction will only be valid once it is on the chain as a block
 
-        if amount >= self.available:
+        if amount <= self.available:
+            
             transaction = {
                 "sender": self.address,
                 "recipient": address,
@@ -192,7 +218,8 @@ def register():
         "available balance": 0,
         "pending balance": 0,
         "total balance": 0,
-        "nodes": []
+        "nodes": [],
+        "past_transactions": []
     }
     
     # print("sevensevensevensevensevenseven")
@@ -213,7 +240,7 @@ def register():
 
     wallet.create_wallet_file(username)
     
-    wallet_dict = {"address": wallet_info['address'], "password": wallet_info['password'], "available balance": wallet_info["pending balance"], "pending balance": wallet_info["total balance"], "total balance": wallet_info["total balance"], "nodes": wallet_info["nodes"], "port": wallet_info["port"]}
+    wallet_dict = {"address": wallet_info['address'], "password": wallet_info['password'], "available balance": wallet_info["pending balance"], "pending balance": wallet_info["total balance"], "total balance": wallet_info["total balance"], "nodes": wallet_info["nodes"], "port": wallet_info["port"], "past_transactions": wallet_info["past_transactions"]}
     wallet_json = json.dumps(wallet_dict) #TODO: encrypt password (it's currently stored as plaintext)
 
 
@@ -234,11 +261,40 @@ def register():
 
     return jsonify(response), 201
 
+
+
+""""
+
+
+(sending)
+available   = 50
+pending     = -20
+total       = available - pending
+            = 50 - (-20)
+            = 70
+
+(receiving)
+available   = 50
+pending     = 20
+total       = available - pending
+            = 50 - 20
+            = 30
+
+    
+
+"""
+
+
+
+
+
 @app.route("/send", methods = ["POST"])
 def send():
 
     wallet.update_balance()
     print(f"{wallet.available=}")
+
+    
 
     values = request.get_json()
 
@@ -249,11 +305,22 @@ def send():
     values_dict["transaction_id"] = str(uuid4()).replace("-", "")
     values_dict["sender"] = "127.0.0.1:" + str(wallet.port)
 
+    amount = values_dict["amount"]
+
+    if amount > wallet.available:
+        return f"Requested amount ({amount}) exceeds available balance ({wallet.available})."
+
+
     response = {
         
         "message": "successful test",
         "values": values
+
     }
+
+    wallet.past_transactions[values_dict["transaction_id"]] = values_dict
+
+    wallet.save_transaction(values_dict)
     
     print(f"{wallet.nodes=}")
     
@@ -344,6 +411,7 @@ def login():
     wallet.total = wallet_dict["total balance"]
     wallet.nodes = set(wallet_dict["nodes"])
     wallet.port = wallet_dict["port"]
+    wallet.past_transactions = wallet_dict["past_transactions"]
 
     print(f"=\n=\n=\n=\n=\n=\n{wallet.nodes=}=\n=\n=\n=\n=\n=\n")
 
@@ -445,6 +513,7 @@ def login_offline():
     wallet.pending = wallet_dict["pending balance"]
     wallet.total = wallet_dict["total balance"]
     wallet.nodes = set(wallet_dict["nodes"])
+    wallet.past_transactions = wallet_dict["past_transactions"]
 
     print("Login successful")
     print("      details:" )

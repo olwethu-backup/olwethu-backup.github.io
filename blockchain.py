@@ -475,7 +475,7 @@ def listen_for_broadcasts(port):
         request_split = request.split('\r\n\r\n')
         
         block_string = request_split[1]
-
+        print(f"\n-o\n-o\n-o\n-o{block_string=}\n-o\n-o\n-o\n-o")
         block_dict = json.loads(block_string)
 
         block_dict["previous_hash"] = blockchain.hash(blockchain.chain[-1])
