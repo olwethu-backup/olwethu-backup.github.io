@@ -25,6 +25,8 @@ import subprocess
 from multiprocessing import Process
 from hashlib import sha256
 
+from blockchain_wallet import register_offline
+
 
 # example of a block
 # block = {
@@ -236,16 +238,19 @@ class BlockChain:
                     if length > max_length and chain_valid:
                         max_length = length
                         new_chain = chain
+                        print(f"{chain_valid=} and length > max_length")
 
                     else:
 
                         if length <= max_length:
                             print("\n\n\n\n")
                             print("length <= max_length")
+                            print(f"{chain_valid=}")
                             print("\n\n\n\n")
                             
                         if not chain_valid:
                             print("\n\n\n\n")
+                            
                             print(f"{chain_valid=}")
                             print("\n\n\n\n")
             except ConnectionError:
@@ -306,6 +311,8 @@ class BlockChain:
                     print(f"><><><{i}")
 
                     if self.chain[-1]["index"] == self.received_blocks[i]["index"] - 1:
+
+                        self.received_blocks[i]["previous_hash"] = self.hash(self.chain[-1])
                         self.chain.append(self.received_blocks[i])
                         print("ADDING BLOCK TO CHAIN")
                         print(f"{self.received_blocks[i]=}")
@@ -434,6 +441,7 @@ class BlockChain:
 
 
 
+
 #Instantiating a node with a blockchain API endpoint
 
 app = Flask(__name__)
@@ -444,6 +452,83 @@ node_identifier = str(uuid4()).replace('-','')
 
 # Instantiate the BlockChain
 blockchain = BlockChain()
+
+
+def register_account_offline():
+    
+    print("\n\n")
+    print(f"============REGISTER============")
+    print("\n\n")   
+
+    username = input("username: ")
+    password = sha256(input("password: ").encode()).hexdigest() #encrypted password
+
+    node_info = {
+        "username":username,
+        "password":password,
+        "password_encrypted": "True",
+        "address":str(uuid4()).replace("-", ""),
+        "connected wallets":"",
+        "chain":[],
+        "nodes":[]
+        
+    }
+    
+    # blockchain.create_node_file(username)
+
+    port_file = open("port_counter.txt", "r")
+    port_data = int(port_file.read())
+    print(f"{port_data=}")
+
+   
+    new_port = port_data + 2
+    # print("111111111")
+    port_file = open("port_counter.txt", "w")
+    # print("22222222222")
+    port_file.write(str(new_port))
+    # print("3333333333")
+    port_file.close()
+    # print("444444444")
+
+    
+    # print("5555555555")
+    dir_list = os.listdir()
+
+    if f"{node_info['username']}_node.json" in dir_list:
+
+        print("Error: A node with this username already exists")
+
+
+    
+    if node_info["connected wallets"] == "":
+        # print("7777777777")
+        #if no connected wallet already exists, we create one
+        
+
+        register_offline(username, password)
+        
+        node_info["connected wallets"] = username
+
+    blockchain.create_node_file(username)
+
+    # node_dict = json.load(open(f"{username}_node.json", "r"))
+
+
+    node_dict = {"address":node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"], "nodes":node_info["nodes"]}
+    node_json = json.dumps(node_dict)
+
+    node_file = open(f"{username}_node.json", "w")
+
+    node_file.write(node_json)
+
+    response = {
+        "message": f"Node '{node_info['username']}' created",
+        "address": node_info["address"]
+    }
+
+    print(f'{response["message"]}')
+    print(f'address: {response["address"]}')
+
 
 
 def listen_for_broadcasts(port):
@@ -709,18 +794,18 @@ def register_account():
         # print("99999999999")        
         # # print(f"{json_data=}")
 
-        rs = [grequests.post(url = blockchain.wallet_address + "/wallets/register", json = json_data)]
-        responses = grequests.map(rs)
-        wallet_response_data = responses[0]
-        # wallet_response_data = requests.post(url = blockchain.wallet_address + "/wallets/register", json = json_data)
+        # rs = [grequests.post(url = blockchain.wallet_address + "/wallets/register", json = json_data)]
+        # responses = grequests.map(rs)
+        # wallet_response_data = responses[0]
+        # # wallet_response_data = requests.post(url = blockchain.wallet_address + "/wallets/register", json = json_data)
 
-        # print("101010101010101010")
-        # print(f"{wallet_response_data=}")
-        wallet_response, wallet_response_code = wallet_response_data.json(), wallet_response_data.status_code
-        # print(f"{wallet_response=}")
-        # print(f"{wallet_response_code=}")
-        if wallet_response_code == 400:     #already-existing wallet means that this username cannot be used
-            return wallet_response, wallet_response_code
+        # # print("101010101010101010")
+        # # print(f"{wallet_response_data=}")
+        # wallet_response, wallet_response_code = wallet_response_data.json(), wallet_response_data.status_code
+        # # print(f"{wallet_response=}")
+        # # print(f"{wallet_response_code=}")
+        # if wallet_response_code == 400:     #already-existing wallet means that this username cannot be used
+        #     return wallet_response, wallet_response_code
         
         node_info["connected wallets"] = wallet_info["username"]
 
@@ -729,7 +814,7 @@ def register_account():
     # node_dict = json.load(open(f"{username}_node.json", "r"))
 
 
-    node_dict = {"address":node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"], "nodes":node_info["nodes"]}
+    node_dict = {"address": node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"], "nodes":node_info["nodes"]}
     node_json = json.dumps(node_dict)
 
     node_file = open(f"{username}_node.json", "w")
@@ -742,6 +827,8 @@ def register_account():
     }
 
     return jsonify(response), 201
+
+
 
 
 @app.route("/propagate", methods = ["GET"])
@@ -859,20 +946,20 @@ def login():
 
     print(f"{blockchain.port=}")
     
-    rs = [grequests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"})]
-    responses = grequests.map(rs)
-    response = responses[0]
+    # rs = [grequests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"})]
+    # responses = grequests.map(rs)
+    # response = responses[0]
 
     
-    # response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
+    # # response = requests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"}) #TODO: Fix this because the password is getting encrypted twice (double encryption)
     
     
     
-    # print(f"{response=}")
-    response, status_code = response.json(), response.status_code
+    # # print(f"{response=}")
+    # response, status_code = response.json(), response.status_code
     
-    if status_code != 200:
-        return response, status_code
+    # if status_code != 200:
+    #     return response, status_code
     
 
     print(f"{len(blockchain.chain)=}")
@@ -893,8 +980,23 @@ def login():
 
 def login_offline(username = "", password = ""):
 
+
+    
+    print("\n\n")
+    print(f"============LOGIN============")
+    print("\n\n")   
+
     print("--------------1")
     if (username == "") or (password == ""):
+
+        login_or_register = input("login (l) or register new node(r): ")
+
+
+        if login_or_register == "r":
+            register_account_offline()
+            return -1
+
+
         # print(">>>>>>>>><<<<<<<<<<<<<")
         username = input("username: ")
         password = sha256(input("password: ").encode()).hexdigest()
@@ -927,15 +1029,21 @@ def login_offline(username = "", password = ""):
     blockchain.username = username
     blockchain.port = node_dict["port"]
     
-    p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : blockchain.port + 1, "subprocess" : True})
-    p1.start()
-    blockchain.wallet_address = "http://localhost:" + str(blockchain.port + 1) #all transactions to and from this node will use this wallet port
+    # p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : blockchain.port + 1, "subprocess" : True})
+    # p1.start()
+
+
+    wallet_dict = json.load(open(f"{blockchain.username}_wallet.json"))
+
+    wallet_address = wallet_dict["address"]
+
+    blockchain.wallet_address = wallet_address  #all transactions to and from this node will use this wallet address
     blockchain.chain = node_dict["chain"]
 
     broadcast_listener_thread = threading.Thread(target = listen_for_broadcasts, args = (blockchain.port + listener_port_offset, ))
     broadcast_listener_thread.daemon = True
     broadcast_listener_thread.start()
-    
+    #TODO: fix chain previous block hashing
     print("--------------6")
 
     print(f"{len(blockchain.chain)=}")
@@ -955,36 +1063,36 @@ def login_offline(username = "", password = ""):
     
     print("--------------8.2")
 
-    print(f">=======\n\n\n\n{blockchain.wallet_address}\n\n\n\n=======<")
-    print("--------------8.3")
-    print("--------------------------------------------------")
-    print("--------------8.4")
-    rs = [grequests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"})]
-    print("====sleeping...")
-    sleep(12)
-    print("====waking up...")
-    # grequests.map(rs)
-    print(f'{rs=}')
-    print("--------------8.5")
-    responses = grequests.map(rs)
-    print(f"{responses=}")
-    print("--------------8.6")
-    response = responses[0]
-    print(f"{responses[0].__dict__=}")
-    print("--------------9")
+    # print(f">=======\n\n\n\n{blockchain.wallet_address}\n\n\n\n=======<")
+    # print("--------------8.3")
+    # print("--------------------------------------------------")
+    # print("--------------8.4")
+    # rs = [grequests.get(url = blockchain.wallet_address + "/wallets/login", params = {"username": username, "password": password, "password_encrypted": "True"})]
+    # print("====sleeping...")
+    # sleep(12)
+    # print("====waking up...")
+    # # grequests.map(rs)
+    # print(f'{rs=}')
+    # print("--------------8.5")
+    # responses = grequests.map(rs)
+    # print(f"{responses=}")
+    # print("--------------8.6")
+    # response = responses[0]
+    # print(f"{responses[0].__dict__=}")
+    # print("--------------9")
     
-    print(":::::::::::::::::::::::::::::::::::::::::::::::::")
-    response, status_code = response.json(), response.status_code
-    print("--------------------------->")
+    # print(":::::::::::::::::::::::::::::::::::::::::::::::::")
+    # response, status_code = response.json(), response.status_code
+    # print("--------------------------->")
 
-    print(f"{response=}")
-    print(f"{status_code=}")
+    # print(f"{response=}")
+    # print(f"{status_code=}")
 
-    print("--------------10")
+    # print("--------------10")
     
-    if status_code != 200:
-        print("Login unsuccessful")
-        return "Error"
+    # if status_code != 200:
+    #     print("Login unsuccessful")
+    #     return "Error"
 
     print("--------------11")
     

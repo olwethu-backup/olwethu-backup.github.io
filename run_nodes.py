@@ -38,7 +38,7 @@ def main():
         # print(f"{process=}")
         process.start()
         print(f"{process=}")
-        time.sleep(20)
+        # time.sleep(5)
 
 if __name__ == "__main__":
     main()

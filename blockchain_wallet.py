@@ -63,9 +63,66 @@ class Wallet:
 
 
 
+    def send(self, address, amount):
+
+        wallet.update_balance()
 
 
-    def send(self, amount, address):
+
+    
+        print(f"{self.available=}")
+
+
+    
+        
+
+        values_dict = {
+                        "recipient": address,
+                        "amount": amount
+                        }
+
+        values_dict["transaction_id"] = str(uuid4()).replace("-", "")
+        values_dict["sender"] = self.address
+
+        amount = values_dict["amount"]
+
+        if amount > self.available:
+            print(f"Requested amount ({amount}) exceeds available balance ({self.available}).")
+            return f"Requested amount ({amount}) exceeds available balance ({self.available})."
+
+
+        response = {
+            
+            "message": "successful test",
+            "values": values_dict
+
+        }
+
+        # print(f'{values_dict["transaction_id"]}')
+
+        self.past_transactions[values_dict["transaction_id"]] = values_dict
+
+        self.save_transaction(values_dict)
+        
+        print(f"{self.nodes=}")
+        
+
+        rs = [grequests.get(url = "http://" + i + "/propagate", params = values_dict) for i in self.nodes]
+    
+
+        node_responses = grequests.map(rs)
+
+        print(f"{node_responses=}")
+        
+
+        print(f"{response['message']}\n\n{response['values']}")
+
+       
+
+
+
+
+    def send_(self, amount, address):
         #Creates a transaction that sends currency to a specific address.
         #The transaction will only be valid once it is on the chain as a block
 
@@ -86,7 +143,7 @@ class Wallet:
     
     def read_chain(self, chain):
 
-        transaction_address = "127.0.0.1:" + str(self.port)
+        transaction_address = self.address
 
         print(f"{transaction_address=}")
 
@@ -120,6 +177,51 @@ class Wallet:
         self.available = available
         
 
+    def register_node(self):
+        #registers a node that will propagate a transaction from a wallet to the rest of the network
+        
+        values = request.get_json()
+
+        
+
+        nodes = []
+        done_entering_nodes = False
+        node = ""
+        
+        while not done_entering_nodes:
+            node = input("Enter node address (enter 'done' to stop): ")
+           
+
+            if node == "done":
+                done_entering_nodes = True
+
+            nodes.append(node)
+
+            
+            
+
+        for address in nodes:
+            self.nodes.add(address)
+
+        wallet_data = json.load(open(f"{self.username}_wallet.json", "r"))
+
+        
+        wallet_info = wallet_data
+
+        wallet_data["nodes"] = list(self.nodes)
+
+        wallet_file = open(f"{self.username}_wallet.json", "w")
+
+        wallet_dump = json.dumps(wallet_data)
+
+        wallet_file.write(wallet_dump)
+
+        wallet_file.close()
+
+        response = {"message": f"nodes successfully registered",
+                    "nodes": nodes}
+
+        return jsonify(response), 201
 
                 
 
@@ -168,31 +270,56 @@ class Wallet:
 
 
 
-#Instantiating a wallet with an API endpoint
-
-app = Flask(__name__)
+#Instantiating a wallet with an API endpoint (wallet doesn't need an API endpoint, actually)
 
 wallet = Wallet()
 
 wallet_identifier = wallet.address
 
 
-@app.route("/wallets/register", methods = ["POST"])
-def register():
+
+
+
+
+""""
+
+
+(sending)
+available   = 50
+pending     = -20
+total       = available - pending
+            = 50 - (-20)
+            = 70
+
+(receiving)
+available   = 50
+pending     = 20
+total       = available - pending
+            = 50 - 20
+            = 30
+
+    
+
+"""
+
+
+def register_offline(username = "", password = ""):
     """
-        Receives a username and password (in JSON), will automatically generate an address for this account.
+        Receives a username and password, will automatically generate an address for this account.
     """
     # print("oneoneoneoneoneoneone")
-    values = request.get_json()
-    username = values.get("username")
-    if ("password_encrypted" not in values) or values.get("password_encrypted") == "False":
-        # print("twotwotwotwotwotwotwotwotwo")
-        # print(f"{values=}")
-        password = sha256(values.get("password").encode()).hexdigest() #TODO: Encrypt this password
-    else:
-        # print("threethreethreethreethreethreethreethree")
-        password = values.get("password")
+    # values = request.get_json()
+
+    print("\n\n")
+    print(f"============REGISTER============")
+    print("\n\n")
     
+    
+    if username == "" and password == "":
+        username = input("username: ")
+        password = sha256(input("password: ").encode()).hexdigest()
+
+
 
 
     
@@ -234,7 +361,7 @@ def register():
 
     if f"{wallet_info['username']}_wallet.json" in dir_list:
         # print("eighteighteighteighteighteight")
-        return "Error: A wallet with this username already exists", 400
+        print("Error: A wallet with this username already exists")
     
     # print("nineninenineninenineninenineninenine")
 
@@ -257,210 +384,12 @@ def register():
         'address': wallet_info['address']
     }
 
+    print(f'{response["message"]}')
+    print(f'address: {response["address"]}')
+
     # print("eleveneleveneleveneleveneleveneleveneleveneleven")
 
-    return jsonify(response), 201
-
-
-
-""""
-
-
-(sending)
-available   = 50
-pending     = -20
-total       = available - pending
-            = 50 - (-20)
-            = 70
-
-(receiving)
-available   = 50
-pending     = 20
-total       = available - pending
-            = 50 - 20
-            = 30
-
-    
-
-"""
-
-
-
-
-
-@app.route("/send", methods = ["POST"])
-def send():
-
-    wallet.update_balance()
-    print(f"{wallet.available=}")
-
-    
-
-    values = request.get_json()
-
-    print(f"{values=}")
-
-    values_dict = {i : values[i] for i in values}
-
-    values_dict["transaction_id"] = str(uuid4()).replace("-", "")
-    values_dict["sender"] = "127.0.0.1:" + str(wallet.port)
-
-    amount = values_dict["amount"]
-
-    if amount > wallet.available:
-        return f"Requested amount ({amount}) exceeds available balance ({wallet.available})."
-
-
-    response = {
-        
-        "message": "successful test",
-        "values": values
-
-    }
-
-    wallet.past_transactions[values_dict["transaction_id"]] = values_dict
-
-    wallet.save_transaction(values_dict)
-    
-    print(f"{wallet.nodes=}")
-    
-
-    rs = [grequests.get(url = "http://" + i + "/propagate", params = values_dict) for i in wallet.nodes]
-    # print(f"{rs=}")
-    # print("[sleeping] (/propagate)")
-    # time.sleep(12)
-    # print("[waking up] (/propagate)")
-
-    node_responses = grequests.map(rs)
-
-    print(f"{node_responses=}")
-    
-
-    # for i in wallet.nodes:
-
-    #     try:
-    #         node_response = requests.get(url = "http://" + i + "/propagate", params = values_dict)
-    #         print(f"{node_response.json()=}")
-    #     except:
-    #         print(f"{i} is unavailable")
-    #         pass
-
-
-    return response, 200
-
-@app.route("/wallets/login", methods = ["GET"])
-def login():
-
-    print("-----1-----")
-    # print(f"{request=}")
-    # print(f"{request.__dict__}")
-    # request.__dict__
-    values = request
-
-    print(f"{type(values)=}")
-    if values.query_string == b'':  #this means that the GET request is sending JSON instead of a query string
-        values = request.get_json()
-        username = values.get("username")
-       
-        password = sha256(values.get("password").encode()).hexdigest()
-    
-    else: #if it gets to this stage, it means that the request's content was not written in JSON
-        print("-------------------------handling exception")
-        values = request.url.split("?")[1].split("&")
-        # R = values.split("?")[1].split("&")
-        # print(f"{R=}")
-        username = values[0].split("=")[1]
-        
-        password = values[1].split("=")[1]
-
-       # print(f"{username=}")
-       # print(f"{password=}")
-        
-       
-
-    print("-----1.5-----")
-    
-    print("-----2-----")
-    # wallet_dict = json.load(open("wallets.json", "r"))
-    
-    dir_list = os.listdir()
-
-    if f"{username}_wallet.json" not in dir_list:
-        print(">>>")
-        return "Error: Incorrect username or password", 400
-    
-    wallet_dict = json.load(open(f"{username}_wallet.json", "r"))
-
-    if wallet_dict["password"] != password:
-        print("<<<")
-        print(f"{wallet_dict["password"]=}")
-        print(f"{password=}")
-        print(f"{sha256(password.encode()).hexdigest()=}")
-        return "Error: Incorrect username or password", 400
-   
-    wallet.username = username
-
-    print(f"{wallet.username=}")
-    
-    # wallet.update_balance()
-    # print(f"{wallet.available=}")
-
-    wallet.address = wallet_dict["address"]
-    wallet.available = wallet_dict["available balance"]
-    wallet.pending = wallet_dict["pending balance"]
-    wallet.total = wallet_dict["total balance"]
-    wallet.nodes = set(wallet_dict["nodes"])
-    wallet.port = wallet_dict["port"]
-    wallet.past_transactions = wallet_dict["past_transactions"]
-
-    print(f"=\n=\n=\n=\n=\n=\n{wallet.nodes=}=\n=\n=\n=\n=\n=\n")
-
-    print("-----4-----")
-    response = {"message": "Login successful",
-                "details": {
-                    "address": wallet_dict["address"],
-                    "available balance" : wallet_dict["available balance"],
-                    "pending balance" : wallet_dict["pending balance"],
-                    "total balance" : wallet_dict["total balance"]
-                }}
-    
-    print("-----5-----")
-    return jsonify(response), 200
-
-# @app.route("/wallets/send", methods = ["GET"])
-# def send():
-
-@app.route("/wallets/register_node", methods = ["POST"])
-def register_node():
-    #registers a node that will propagate a transaction from a wallet to the rest of the network
-
-    values = request.get_json()
-
-    nodes = values.get("nodes")
-
-    for address in nodes:
-        wallet.nodes.add(address)
-
-    wallet_data = json.load(open(f"{wallet.username}_wallet.json", "r"))
-
-    
-    wallet_info = wallet_data
-
-    wallet_data["nodes"] = list(wallet.nodes)
-
-    wallet_file = open(f"{wallet.username}_wallet.json", "w")
-
-    wallet_dump = json.dumps(wallet_data)
-
-    wallet_file.write(wallet_dump)
-
-    wallet_file.close()
-
-    response = {"message": f"nodes successfully registered",
-                "nodes": nodes}
-
-    return jsonify(response), 201
-
+    # return jsonify(response), 201
 
 
 
@@ -479,8 +408,17 @@ def register_node():
 def login_offline():
 
   
+    login_or_register = input("login (l) or register new wallet(r): ")
 
-  
+
+    if login_or_register == "r":
+        register_offline()
+        return -1
+
+    print("\n\n")
+    print(f"============LOGIN============")
+    print("\n\n")    
+
     username = input("username: ")
     password = sha256(input("password: ").encode()).hexdigest()
     
@@ -528,21 +466,55 @@ def login_offline():
 
 
 
+def main():
+    login_offline()
 
-
-
-
-
-
-def main(port = 5000, subprocess = False):
-    if subprocess:
+    while True:
         
-        app.run(host="0.0.0.0", port=port)
-    else:
+        print('\n\n\n')
+
+        print("===========WALLET DETAILS===========")
+        print(f"BALANCE:")
+        print(f"              AVAILABLE: {wallet.available}")
+        print(f"              PENDING:   {wallet.pending}")
+        print(f"              TOTAL:     {wallet.total}")
+
+        print('\n\n\n')
+
+        print("===========OPTIONS===========")
+        print("TYPE:")
+        print("         1: send (send coins)")
+        print("         2: register nodes (register nodes for transaction validation)")
+        print("         3: update balance (update wallet balance to latest balance reflected on the chain)")
+
+
+        print("\n\n\n")
+
+        option = int(input("Enter option: "))
+
+
+        if option == 1:
+
+            address = input("Enter recipient address: ")
+            amount = float(input("Enter transfer amount: "))
+
+            wallet.send(address, amount)
+
+        elif option == 2:
+
+            wallet.register_node()
         
-        port = login_offline()
-        if port != -1:
-            app.run(host="0.0.0.0", port=port)
+        elif option == 3:
+
+            wallet.update_balance()
+        
+
+
+        
+
+
+
+
 
 if __name__ == "__main__":
     main()
