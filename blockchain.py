@@ -265,8 +265,57 @@ class BlockChain:
 
 
 
+    def is_valid_transaction(self, incoming_transaction):
+
+        sender_address = incoming_transaction["sender"]
+        print(f"{sender_address=}")
+
+        available = 0
+        
+        
+        for block in self.chain:
+            
+            for transaction in block["transactions"]:
+                
+                print(f"------------>{transaction['sender']=}")
+                print(f"<------------{transaction['recipient']=}")
 
 
+                if transaction["sender"] == sender_address:
+
+                   
+                   
+
+                    available -= float(transaction["amount"])
+
+                    print("sender")
+                    print(f"{float(transaction['amount'])=}")
+                    print(f"{available=}")
+                    print(">>>>>>>>>>>>>>>>>>>>>")
+                
+                if transaction["recipient"] == sender_address:
+
+                   
+                    
+                    available += float(transaction["amount"])
+
+                    print("recipient")
+                    print(f"{float(transaction['amount'])=}")
+                    print(f"{available=}")
+                    print(">>>>>>>>>>>>>>>>>>>>>")
+
+        print(f"------- {available=}")
+        print(f"------- {incoming_transaction['amount']=}")
+        if available >= float(incoming_transaction["amount"]):
+            return True
+        else:
+            return False
+
+        
+
+       
+
+       
 
     
     def proof_of_work(self, last_proof):
@@ -293,8 +342,10 @@ class BlockChain:
         while self.valid_proof(last_proof, proof) is False:
 
             if self.broadcasted_block.is_set():
+                
                 for i in range(28):
                     print(i*"&")
+
                 print(f"RECEIVED BROADCASTED BLOCKS (port: {self.port})")
                 self.broadcasted_block = threading.Event()
 
@@ -609,7 +660,7 @@ def mine():
     
     blockchain.new_transaction(
         sender = "0",
-        recipient = "127.0.0.1:" + str(blockchain.port + 2),    #TODO: Maybe change this recipient identifier to the node's wallet's IP address
+        recipient = blockchain.wallet_address,    #TODO: Maybe change this recipient identifier to the node's wallet's IP address
         amount = 1,
         transaction_id = str(uuid4()).replace("-", "")
     )
@@ -854,7 +905,12 @@ def propagate():
 
     past_transaction_test = ""
 
+
+
+
     if values_dict not in blockchain.current_transactions:
+
+
         
         if values_dict['transaction_id'] in blockchain.past_transactions:
             print(f'{(values_dict['transaction_id'] in blockchain.past_transactions)=}')
@@ -862,34 +918,46 @@ def propagate():
             pass
 
         else:
-            blockchain.past_transactions[values_dict["transaction_id"]] = 1
-            print(f"\n\n\n----->{blockchain.past_transactions=}\n\n\n")
 
-            blockchain.new_transaction(values_dict['sender'], values_dict['recipient'], values_dict['amount'], values_dict['transaction_id'])
-            
-            
-            print("======ENTERING FOR LOOP======")
-            print(f"{blockchain.nodes=}")
+            valid_transaction = blockchain.is_valid_transaction(values_dict)
 
-            # node_addresses = ["http://" + node + "/propagate" for node in blockchain.nodes]
-            # node_responses = [grequests.get(url = "http://" + node + "/propagate", params = values_dict) for node in blockchain.nodes]
+            if valid_transaction:
 
-            # grequests.map(node_responses)
+                print(f"\n+\n+\n+\n+\n+\n{valid_transaction=}\n+\n+\n+\n+\n+\n")
 
-            rs = [grequests.get(url = "http://" + node + "/propagate", params = values_dict) for node in blockchain.nodes]
-            responses = grequests.map(rs)
-            print(f'{responses=}')
+                blockchain.past_transactions[values_dict["transaction_id"]] = 1
+                print(f"\n\n\n----->{blockchain.past_transactions=}\n\n\n")
+
+                blockchain.new_transaction(values_dict['sender'], values_dict['recipient'], values_dict['amount'], values_dict['transaction_id'])
+                
+                
+                print("======ENTERING FOR LOOP======")
+                print(f"{blockchain.nodes=}")
+
+                # node_addresses = ["http://" + node + "/propagate" for node in blockchain.nodes]
+                # node_responses = [grequests.get(url = "http://" + node + "/propagate", params = values_dict) for node in blockchain.nodes]
+
+                # grequests.map(node_responses)
+
+                rs = [grequests.get(url = "http://" + node + "/propagate", params = values_dict) for node in blockchain.nodes]
+                responses = grequests.map(rs)
+                print(f'{responses=}')
 
 
-            # for node in blockchain.nodes:
-            #         try:
-            #             node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
-            #             print(f">>>>>> {node_response.json()=}")
-            #         except ConnectionError:
-            #             print(f"{node} is unavailable")
+                # for node in blockchain.nodes:
+                #         try:
+                #             node_response = requests.get(url = "http://" + node + "/propagate", params = values_dict)
+                #             print(f">>>>>> {node_response.json()=}")
+                #         except ConnectionError:
+                #             print(f"{node} is unavailable")
 
-            mine()
-            consensus()
+                mine()
+                consensus()
+
+            else:
+
+                print(f"\n-\n-\n-\n-\n-\n{valid_transaction=}\n-\n-\n-\n-\n-\n")
+
     else:
         pass
 

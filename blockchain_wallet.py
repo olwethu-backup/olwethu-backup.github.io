@@ -59,6 +59,21 @@ class Wallet:
         wallet_file.close()
 
 
+    
+    def save_transactions(self):
+        wallet_dict = json.load(open(f"{self.username}_wallet.json", "r"))
+
+        wallet_dict["past_transactions"] = self.past_transactions
+
+        wallet_dict_dump = json.dumps(wallet_dict)
+
+        wallet_file = open(f"{self.username}_wallet.json", "w")
+        
+        wallet_file.write(wallet_dict_dump)
+
+        wallet_file.close()
+
+
 
 
 
@@ -83,6 +98,8 @@ class Wallet:
 
         values_dict["transaction_id"] = str(uuid4()).replace("-", "")
         values_dict["sender"] = self.address
+        values_dict["status"] = "pending"
+
 
         amount = values_dict["amount"]
 
@@ -149,6 +166,8 @@ class Wallet:
 
         available = 0
 
+        transaction_recently_confirmed = False
+
         for block in chain:
             
             for transaction in block["transactions"]:
@@ -157,6 +176,13 @@ class Wallet:
                 print(f"{transaction['recipient']=}")
                 if transaction["sender"] == transaction_address:
 
+                    if transaction["transaction_id"] in self.past_transactions:
+                        if self.past_transactions[transaction["transaction_id"]]["status"] == "pending":
+                            self.past_transactions[transaction["transaction_id"]]["status"] = "confirmed"
+                       
+                        if not transaction_recently_confirmed:
+                            transaction_recently_confirmed = True
+                   
                    
 
                     available -= float(transaction["amount"])
@@ -166,6 +192,15 @@ class Wallet:
                     print(".................")
                 
                 if transaction["recipient"] == transaction_address:
+
+                    if transaction["transaction_id"] in self.past_transactions:
+                        if self.past_transactions[transaction["transaction_id"]]["status"] == "pending":
+                            self.past_transactions[transaction["transaction_id"]]["status"] = "confirmed"
+                       
+                        if not transaction_recently_confirmed:
+                            transaction_recently_confirmed = True
+                   
+
                     
                     available += float(transaction["amount"])
 
@@ -175,6 +210,9 @@ class Wallet:
                     print(".................")
 
         self.available = available
+
+        if transaction_recently_confirmed:
+            self.save_transactions()
         
 
     def register_node(self):
@@ -452,6 +490,8 @@ def login_offline():
     wallet.total = wallet_dict["total balance"]
     wallet.nodes = set(wallet_dict["nodes"])
     wallet.past_transactions = wallet_dict["past_transactions"]
+
+    wallet.update_balance()
 
     print("Login successful")
     print("      details:" )
