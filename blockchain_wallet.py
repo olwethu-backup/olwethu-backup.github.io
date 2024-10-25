@@ -106,7 +106,9 @@ class Wallet:
         if amount > self.available:
             print(f"Requested amount ({amount}) exceeds available balance ({self.available}).")
             return f"Requested amount ({amount}) exceeds available balance ({self.available})."
-
+        if amount < 0:
+            print(f"Requested amount ({amount}) is less than zero.")
+            return f"Requested amount ({amount}) is less than zero."
 
         response = {
             
@@ -132,6 +134,13 @@ class Wallet:
         print(f"{node_responses=}")
         
 
+        self.available -= amount
+
+        self.pending += amount
+
+        self.total = self.available + self.pending
+
+
         print(f"{response['message']}\n\n{response['values']}")
 
        
@@ -142,7 +151,7 @@ class Wallet:
     def send_(self, amount, address):
         #Creates a transaction that sends currency to a specific address.
         #The transaction will only be valid once it is on the chain as a block
-
+        
         if amount <= self.available:
             
             transaction = {
@@ -165,15 +174,27 @@ class Wallet:
         print(f"{transaction_address=}")
 
         available = 0
+        # pending = 0
 
         transaction_recently_confirmed = False
 
+        print(f"{len(chain)=}")
+        block_num = 0
         for block in chain:
-            
+            print(f"{block_num=}")
+            block_num += 1
             for transaction in block["transactions"]:
+                print(f"[[[[{block_num=}]]]]")
                 
+
+                print()
                 print(f"{transaction['sender']=}")
                 print(f"{transaction['recipient']=}")
+                print(f"{transaction['transaction_id']=}")
+                print(f"{transaction['amount']=}")
+                print()
+                
+
                 if transaction["sender"] == transaction_address:
 
                     if transaction["transaction_id"] in self.past_transactions:
@@ -190,6 +211,10 @@ class Wallet:
                     print(f"{float(transaction['amount'])=}")
                     print(f"{available=}")
                     print(".................")
+                    
+
+
+     
                 
                 if transaction["recipient"] == transaction_address:
 
@@ -209,7 +234,13 @@ class Wallet:
                     print(f"{available=}")
                     print(".................")
 
+                   
+
+        
+        
         self.available = available
+        # self.pending = pending
+        # self.total = self.available + self.pending
 
         if transaction_recently_confirmed:
             self.save_transactions()
@@ -267,9 +298,14 @@ class Wallet:
 
     def update_balance(self):
 
+        
+        print(f"{self.nodes=}")
+
         for node in self.nodes:
+            print(f"{node=}")
 
             try:
+
                 rs = [grequests.get(f"http://{node}/chain")]
                 responses = grequests.map(rs)
 
@@ -286,6 +322,8 @@ class Wallet:
                     self.read_chain(chain)
 
                     self.total = self.available + self.pending
+
+                    print(f"{node} is available [wallet.update_balance()]")
                 
                 break
 
@@ -294,6 +332,18 @@ class Wallet:
                 print(f"{node} is unavailable [wallet.update_balance()]")
 
                 continue
+
+        pending = 0
+
+        for past_transaction in self.past_transactions:
+            if self.past_transactions[past_transaction]["status"] == "pending":
+                pending += float(self.past_transactions[past_transaction]["amount"])
+                print(f"FOUND PENDING TRANSACTION: {past_transaction}\nAMOUNT: {float(self.past_transactions[past_transaction]['amount'])}\nPENDING: {pending}")
+        
+        self.pending = pending
+        self.total = self.available + self.pending
+        
+
         
         wallets_dict = json.load(open(f"{self.username}_wallet.json", "r"))
 
@@ -514,6 +564,8 @@ def main():
         print('\n\n\n')
 
         print("===========WALLET DETAILS===========")
+        print(f"USERNAME: {wallet.username}")
+        print(f"ADDRESS: {wallet.address}")
         print(f"BALANCE:")
         print(f"              AVAILABLE: {wallet.available}")
         print(f"              PENDING:   {wallet.pending}")

@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 import threading
 import socket
 
+from random import randint
 import os
 
 # import requests
@@ -259,9 +260,26 @@ class BlockChain:
 
         if new_chain:
             self.chain = new_chain
+            self.save_chain()
             return True
         
         return False
+
+    def clear_chain(self):
+        nodes_dict = json.load(open(f"{self.username}_node.json", "r"))
+        print(f"{self.username=}")
+
+
+        self.chain = []
+        nodes_dict["chain"] = self.chain
+
+        nodes_json = json.dumps(nodes_dict)
+
+        nodes_file = open(f"{self.username}_node.json", "w")
+
+        nodes_file.write(nodes_json)
+
+        nodes_file.close()
 
 
 
@@ -271,7 +289,9 @@ class BlockChain:
         print(f"{sender_address=}")
 
         available = 0
-        
+
+        if float(incoming_transaction["amount"]) < 0:
+            return False
         
         for block in self.chain:
             
@@ -306,6 +326,7 @@ class BlockChain:
 
         print(f"------- {available=}")
         print(f"------- {incoming_transaction['amount']=}")
+        
         if available >= float(incoming_transaction["amount"]):
             return True
         else:
@@ -314,7 +335,74 @@ class BlockChain:
         
 
        
+    def accept_broadcasted_blocks(self):
 
+        for i in range(28):
+            print(i*"~&")
+
+        print(f"~~~~~~~~~~~RECEIVED BROADCASTED BLOCKS (port: {self.port})")
+        self.broadcasted_block = threading.Event()
+
+        print(f"{self.broadcasted_block=}")
+        
+        print(f"~~~~~~~~~~~-----Adding received blocks to chain (port: {self.port}) (len(self.received_blocks): {len(self.received_blocks)})")
+        
+        print("~~~~~~~~~~~__________________________________________________________________")
+        print(f'\n_+\n_+\n_+\n_+\n_+\n{self.broadcasted_block=}\n_+\n_+\n_+\n_+\n_+\n')
+
+        print(f'\n|\n|\n|\n|\n|\n{self.received_blocks=}    {self.port=} \n|\n|\n|\n|\n|\n')
+
+        for i in range(len(self.received_blocks)):
+            print(f">~<~<~>~<~{i}")
+
+            if self.chain[-1]["index"] == self.received_blocks[i]["index"] - 1:
+
+                self.received_blocks[i]["previous_hash"] = self.hash(self.chain[-1])
+
+                duplicate_transaction_indices = []
+                new_current_transactions = []
+
+                for transaction in self.received_blocks[i]["transactions"]:
+
+                    idx = 0
+                    for current_transaction in self.current_transactions:
+
+                        if current_transaction["transaction_id"] == transaction["transaction_id"]:
+                            duplicate_transaction_indices.append(idx)
+                            print(50*"\n")
+                            for a in range(100):
+                                print(a*f"DUPLICATE TRANSACTION (transaction ID: {transaction['transaction_id']}) (current_transaction ID: {current_transaction['transaction_id']}) {idx =}")
+                            print(50*"\n")
+                        else:
+                            if idx not in duplicate_transaction_indices:
+                                new_current_transactions.append(current_transaction)
+                                print(f"{self.current_transactions=}")
+                                print(f"{new_current_transactions=}")
+                                print(f"{(current_transaction['transaction_id'] == transaction['transaction_id'])=}")
+                                print(f"{current_transaction['transaction_id']=}")
+                                print(f"{transaction['transaction_id']=}")
+
+
+                        
+                        idx += 1
+                
+                print(f"{len(self.current_transactions)=}")
+                print(f"{self.current_transactions=}")
+                
+                self.current_transactions = new_current_transactions #eliminates duplicate transactions that were already accounted for in the received block
+                print(f"{len(self.current_transactions)=}")
+                print(f"{self.current_transactions=}")
+                print("removed duplicate transactions")
+                
+            
+               
+               
+                self.chain.append(self.received_blocks[i])
+                print("~~~~~~~~~~~ADDING BLOCK TO CHAIN")
+                print(f"{self.received_blocks[i]=}")
+
+        print("~~~~~~~~~~~__________________________________________________________________")
+        
        
 
     
@@ -330,6 +418,10 @@ class BlockChain:
         #TODO: Figure out why the nodes are mining an extra time after receiving broadcasted blocks
         #TODO: Make sure that received blocks hash the previous block in the chain
 
+        random_delay = randint(0, 40)
+
+        # delay = 0
+
         self.num_proofs += 1
 
         proof = 0
@@ -338,44 +430,26 @@ class BlockChain:
                     print(i*"_-")
         
         print(f"starting proof of work ({self.port=}) ({self.num_proofs=}) ")
+
+        # for i in range(0, random_delay*500):
+        #     delay += 1
+        
+        sleep(random_delay)
+        print(f"{random_delay=} ({self.port=}) ({self.username=})")
+
         
         while self.valid_proof(last_proof, proof) is False:
 
             if self.broadcasted_block.is_set():
-                
-                for i in range(28):
-                    print(i*"&")
+                self.accept_broadcasted_blocks()
 
-                print(f"RECEIVED BROADCASTED BLOCKS (port: {self.port})")
-                self.broadcasted_block = threading.Event()
-
-                print(f"{self.broadcasted_block=}")
-                
-                print(f"-----Adding received blocks to chain (port: {self.port}) (len(self.received_blocks): {len(self.received_blocks)})")
-                
-                print("__________________________________________________________________")
-                print(f'\n_+\n_+\n_+\n_+\n_+\n{self.broadcasted_block=}\n_+\n_+\n_+\n_+\n_+\n')
-
-                print(f'\n|\n|\n|\n|\n|\n{self.received_blocks=}    {self.port=} \n|\n|\n|\n|\n|\n')
-
-                for i in range(len(self.received_blocks)):
-                    print(f"><><><{i}")
-
-                    if self.chain[-1]["index"] == self.received_blocks[i]["index"] - 1:
-
-                        self.received_blocks[i]["previous_hash"] = self.hash(self.chain[-1])
-                        self.chain.append(self.received_blocks[i])
-                        print("ADDING BLOCK TO CHAIN")
-                        print(f"{self.received_blocks[i]=}")
-
-                print("__________________________________________________________________")
                 
                 self.received_blocks = []
                 self.save_chain()
                 
 
                 return -1    
-                break
+                # break
 
             proof += 1
 
@@ -658,20 +732,34 @@ def mine():
     #     transaction_id = str(uuid4()).replace("-", "")
     # )
     
-    blockchain.new_transaction(
+    # print(f"--------BLOCK CREATION TRANSACTIONS--------") #TODO: There might be a problem where the reward is added to the current transactions, and isn't removed from there in the case where the node receives a broadcasted block. This can result in the node being paid for a block it never mined. Fix this.
+    # for transaction in blockchain.current_transactions:
+    #     if transaction["sender"] == "0":
+    #         print("\n\n\n")
+    #         print(transaction)
+    #         print("::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+    #         print("\n\n\n")
+
+   
+    # print(f"--------DONE ADDING LATEST BLOCK CREATION TRANSACTION--------")
+
+    #Forge the new Block by adding it to the chain
+
+    response = {"message":"error"}
+
+
+    if proof > 0:   #if proof_of_work() returned the correct proof
+
+        blockchain.new_transaction(
         sender = "0",
         recipient = blockchain.wallet_address,    #TODO: Maybe change this recipient identifier to the node's wallet's IP address
         amount = 1,
         transaction_id = str(uuid4()).replace("-", "")
-    )
+            )
+        
+        previous_hash = blockchain.hash(last_block)
 
-    #Forge the new Block by adding it to the chain
-
-    previous_hash = blockchain.hash(last_block)
-
-    response = {"message":"error"}
-
-    if proof > 0:   #if proof_of_work() returned the correct proof
+       
         block = blockchain.new_block(proof, previous_hash)
 
         print(f"\n\n\n\n\n\n\n{block=}\n\n\n\n\n\n\n\n")
@@ -685,7 +773,7 @@ def mine():
         }
 
         blockchain.save_chain()
-
+ 
         blockchain.broadcast_block(block)
     
     else:
@@ -1175,11 +1263,19 @@ def login_offline(username = "", password = ""):
 
     
 
-def main(username = "", password = ""):
+def main(username = "", password = "", mode = ""):
     # blockchain_wallet.main()
     # subprocess.check_call("python blockchain_wallet.py", shell = True)
-
+    
+        
     port = login_offline(username, password) #int(input("Blockchain Node - Select port (5000/5001): "))
+
+    if mode == "clear":
+        blockchain.clear_chain()
+        print(f"{blockchain.port} node's chain has been cleared")
+        print("--------------------------------------------------")
+        return
+    
     if port != -1:
         # p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : port + 1, "subprocess" : True})
 
