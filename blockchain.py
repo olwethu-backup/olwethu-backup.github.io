@@ -108,6 +108,9 @@ class BlockChain:
 
     def broadcast_block(self, block):
 
+
+        #TODO: Write code that, when accepting a broadcasting block, confirms that the received block does infact contain the correct proof of work
+
         for i in range(20):
             print(i*"[]")
         
@@ -369,18 +372,18 @@ class BlockChain:
 
                         if current_transaction["transaction_id"] == transaction["transaction_id"]:
                             duplicate_transaction_indices.append(idx)
-                            print(50*"\n")
-                            for a in range(100):
-                                print(a*f"DUPLICATE TRANSACTION (transaction ID: {transaction['transaction_id']}) (current_transaction ID: {current_transaction['transaction_id']}) {idx =}")
-                            print(50*"\n")
+                            # print(50*"\n")
+                            # for a in range(100):
+                            #     print(a*f"DUPLICATE TRANSACTION (transaction ID: {transaction['transaction_id']}) (current_transaction ID: {current_transaction['transaction_id']}) {idx =}")
+                            # print(50*"\n")
                         else:
                             if idx not in duplicate_transaction_indices:
                                 new_current_transactions.append(current_transaction)
-                                print(f"{self.current_transactions=}")
-                                print(f"{new_current_transactions=}")
-                                print(f"{(current_transaction['transaction_id'] == transaction['transaction_id'])=}")
-                                print(f"{current_transaction['transaction_id']=}")
-                                print(f"{transaction['transaction_id']=}")
+                                # print(f"{self.current_transactions=}")
+                                # print(f"{new_current_transactions=}")
+                                # print(f"{(current_transaction['transaction_id'] == transaction['transaction_id'])=}")
+                                # print(f"{current_transaction['transaction_id']=}")
+                                # print(f"{transaction['transaction_id']=}")
 
 
                         
@@ -417,6 +420,7 @@ class BlockChain:
         """
         #TODO: Figure out why the nodes are mining an extra time after receiving broadcasted blocks
         #TODO: Make sure that received blocks hash the previous block in the chain
+        #TODO: Make sure that the node prioritises the block with the earliest timestamp to add to its chain. Therefore, if it receives a broadcasted block with an earlier timestamp, it should be prioritise that one to add to a block
 
         random_delay = randint(0, 40)
 
@@ -750,31 +754,56 @@ def mine():
 
     if proof > 0:   #if proof_of_work() returned the correct proof
 
-        blockchain.new_transaction(
-        sender = "0",
-        recipient = blockchain.wallet_address,    #TODO: Maybe change this recipient identifier to the node's wallet's IP address
-        amount = 1,
-        transaction_id = str(uuid4()).replace("-", "")
-            )
+        #check that we didn't already receive a block with the proof that we want
+        #TODO: when adding the verification that this proof is correct as per the other TODO, make sure that you do that verification in this block of code too
         
-        previous_hash = blockchain.hash(last_block)
+        block_already_exists = False
 
-       
-        block = blockchain.new_block(proof, previous_hash)
+        for received_block in blockchain.received_blocks:
 
-        print(f"\n\n\n\n\n\n\n{block=}\n\n\n\n\n\n\n\n")
+            print(f"{received_block['proof']}")
 
-        response = {
-            "message": "New Block Forged",
-            "index": block["index"],
-            "transactions": block["transactions"],
-            "proof": block["proof"],
-            "previous_hash": block["previous_hash"]
-        }
+            if received_block["proof"] == proof:
+                block_already_exists = True
+                break
+        
 
-        blockchain.save_chain()
- 
-        blockchain.broadcast_block(block)
+        
+        if not block_already_exists: #if the current node didn't already receive a block from another node which is the same as the one that the current node mined
+            blockchain.new_transaction(
+            sender = "0",
+            recipient = blockchain.wallet_address,    #TODO: Maybe change this recipient identifier to the node's wallet's IP address
+            amount = 1,
+            transaction_id = str(uuid4()).replace("-", "")
+                )
+            
+            previous_hash = blockchain.hash(last_block)
+
+        
+            block = blockchain.new_block(proof, previous_hash)
+
+            print(f"\n\n\n\n\n\n\n{block=}\n\n\n\n\n\n\n\n")
+
+            response = {
+                "message": "New Block Forged",
+                "index": block["index"],
+                "transactions": block["transactions"],
+                "proof": block["proof"],
+                "previous_hash": block["previous_hash"]
+            }
+
+            blockchain.save_chain()
+    
+            blockchain.broadcast_block(block)
+        
+        else:
+
+            print("\n5\n5\n5\n")
+            print(f"broadcasted block was already available ({blockchain.username=}) ({blockchain.port=}) ({blockchain.wallet_address=})")
+            print("\n5\n5\n5\n")
+            response = {
+            "message": "Failed to forge block (because broadcasted block was already available)"          
+            }
     
     else:
         response = {
@@ -847,6 +876,9 @@ def save_chain():
     
     return jsonify(response), 200
 
+#TODO: Add 6-block wat before confirming transactions (might be necessary)
+#TODO: Research Merkle trees and incorporate them if applicable
+
 
 @app.route('/nodes/resolve', methods=['GET'])
 def consensus():
@@ -860,6 +892,7 @@ def consensus():
             'new_chain': blockchain.chain
         }
         print('Our chain was replaced')
+        print(50*"\n/+")
         blockchain.save_chain()
 
     else:
@@ -868,6 +901,7 @@ def consensus():
             'chain': blockchain.chain
         }
         print('Our chain is authoritative')
+        print(50*"\n/=")
     
     return jsonify(response), 200
 
@@ -1019,7 +1053,7 @@ def propagate():
                 blockchain.new_transaction(values_dict['sender'], values_dict['recipient'], values_dict['amount'], values_dict['transaction_id'])
                 
                 
-                print("======ENTERING FOR LOOP======")
+                print("======ENTERING ASYNCHRONOUS PROPAGATION REQUESTS (grequests.get)======")
                 print(f"{blockchain.nodes=}")
 
                 # node_addresses = ["http://" + node + "/propagate" for node in blockchain.nodes]
@@ -1029,7 +1063,7 @@ def propagate():
 
                 rs = [grequests.get(url = "http://" + node + "/propagate", params = values_dict) for node in blockchain.nodes]
                 responses = grequests.map(rs)
-                print(f'{responses=}')
+                print(f'{responses=} (/propagate)')
 
 
                 # for node in blockchain.nodes:
