@@ -358,6 +358,26 @@ class BlockChain:
         for i in range(len(self.received_blocks)):
             print(f">~<~<~>~<~{i}")
 
+            
+
+            if self.chain[-1]["index"] == self.received_blocks[i]["index"]:
+                print(50*":;:\n")
+                print(f'self.chain[-1]["index"] == self.received_blocks[{i}]["index"]')
+                print(f"{self.username=}")
+                print(f"{self.received_blocks[i]['timestamp']=}")
+                print(f"{self.chain[-1]['timestamp']=}")
+                print(f"{type(self.received_blocks[i]['timestamp'])=}")
+                print(f"{type(self.chain[-1]['timestamp'])=}")
+
+
+                
+                print(f"{self.received_blocks[i]['proof']=}")
+                print(f"{self.chain[-1]['proof']=}")
+                print(f"{type(self.received_blocks[i]['proof'])=}")
+                print(f"{type(self.chain[-1]['proof'])=}")
+
+
+
             if self.chain[-1]["index"] == self.received_blocks[i]["index"] - 1:
 
                 self.received_blocks[i]["previous_hash"] = self.hash(self.chain[-1])
@@ -397,61 +417,29 @@ class BlockChain:
                 print(f"{self.current_transactions=}")
                 print("removed duplicate transactions")
                 
-            
-               
-                self.received_blocks[i]["previous_hash"] = self.hash(self.chain[-1])
-                self.chain.append(self.received_blocks[i])
 
-                # self.broadcast_block(self.received_blocks[i]) #TODO: Look into why this broadcast call is cauing such a big delay in the network (could it be infinite recursion)
+               
+                print("~~~~~~~~~~~ADDING BLOCK TO CHAIN")
+                self.chain.append(self.received_blocks[i])
                 
-                print("~~~~~~~~~~~ADDING BLOCK TO CHAIN") #TODO: broadcast again after adding block
                 print(f"{self.received_blocks[i]=}")
 
-            
-            
-            if self.chain[-1]["index"] == self.received_blocks[i]["index"]:
-
-                for y in range(50):
-                    print(y*"$")
-                print(f"FOUND MATCHING BLOCK")
-
-                print(f"{(self.chain[-1]["index"] == self.received_blocks[i]["index"])=}")
-
-                print(f"{self.chain[-1]=}      {self.chain[-1]["timestamp"]=}      {self.chain[-1]["proof"]=}")
-
-                print(10*"\n")
-
-                print(f"{self.received_blocks[i]=}      {self.received_blocks[i]["timestamp"]=}      {self.received_blocks[i]["proof"]=}")
-
-                print(10*"\n")
-
-                print(f"{self.received_blocks[i]=}      {self.received_blocks[i]["timestamp"]=}      {self.received_blocks[i]["proof"]=}")
-
-                if float(self.received_blocks[i]["timestamp"]) < float(self.chain[-1]["timestamp"]):
+            elif self.chain[-1]["index"] == self.received_blocks[i]["index"]: #TODO: INVESTIGATE this code block and see why it isn't exactly working (IMPORTANT FOR NODES THAT FINISH MINING AT SIMILAR TIMES)
+                if (float(self.received_blocks[i]["timestamp"]) < float(self.chain[-1]["timestamp"])) and (self.received_blocks[i]["proof"] == self.chain[-1]["proof"]):
+                    print(50*">>>v\n")
+                    print("REPLACING HEAD BLOCK WITH EARLIER-TIMESTAMPED BLOCK")
                     head = self.chain.pop(-1)
 
-                    print("REPLACING HEAD WITH EARLIER-TIMESTAMPED BLOCK")
+                    print(f'{head=}')
+                    print(f'{self.received_blocks[i]=}')
 
-                    print(f"{head=}")
-                    print(f"{self.received_blocks[i]=}")
+                    self.chain.append(self.received_blocks[i]) #TODO: Make sure that this head-replacing block hashes the previous block correctly  
 
-                    self.received_blocks[i]["previous_hash"] = self.hash(self.chain[-1])
-                    self.chain.append(self.received_blocks[i])
+                    print(50*">>>v\n")
 
-                    # self.broadcast_block(self.received_blocks[i]) #TODO: Look into why this broadcast call is cauing such a big delay in the network (could it be infinite recursion)
-
-                    print("DONE ADDING EARLIER-TIMESTAMPED BLOCK")
-                    print(f"[{self.chain[-1]}]")
-
-                    print(f"{(self.chain[-1] == self.received_blocks[i])=}")
+                
 
                     
-
-
-
-
-
-
 
 
 
@@ -474,26 +462,16 @@ class BlockChain:
         #TODO: Make sure that the node prioritises the block with the earliest timestamp to add to its chain. Therefore, if it receives a broadcasted block with an earlier timestamp, it should be prioritise that one to add to a block
 
         # random_delay = randint(0, 40)
-
-
-       
         random_delay = randint(0, 3)
 
         # delay = 0
 
         self.num_proofs += 1
 
-        print(60*"u\n")
-        print(f"{last_proof=} {self.num_proofs=} {self.current_transactions=}")
-        print(60*"\n")
-
-
         proof = 0
 
         for i in range(28):
                     print(i*"_-")
-
-        
         
         print(f"starting proof of work ({self.port=}) ({self.num_proofs=}) ")
 
@@ -507,8 +485,10 @@ class BlockChain:
         while self.valid_proof(last_proof, proof) is False:
 
             if self.broadcasted_block.is_set():
+                # self.accept_broadcasted_blocks()
 
-                # self.accept_broadcasted_blocks()        
+                
+                # self.received_blocks = []
                 # self.save_chain()
                 
 
@@ -761,10 +741,10 @@ def listen_for_broadcasts(port):
         
         blockchain.broadcasted_block.set()
         blockchain.received_blocks.append(block_dict)
+        blockchain.accept_broadcasted_blocks()
 
-        blockchain.accept_broadcasted_blocks()        
+        blockchain.received_blocks = []
         blockchain.save_chain()
-                
 
 
         # print(f'\n=\n=\n=\n=\n=\n{blockchain.broadcasted_block=}\n=\n=\n=\n=\n=\n')
@@ -787,8 +767,6 @@ def mine():
     #We run the proof of work algorithm to get the next proof...
 
     last_block = blockchain.last_block
-
-    # print(f"{50*'09\n'}{last_block=}\n-----------------------------------------------------------------")
     last_proof = last_block['proof']
     proof = blockchain.proof_of_work(last_proof)
 
@@ -817,8 +795,6 @@ def mine():
 
     response = {"message":"error"}
 
-    #TODO: Implement Merkle Tree for transactions, then compare the Merkle Tree of the latest block to the Merkle Tree of the current transactions to see if they match. If they do match, cancel the current mining process as the block with our current transactions already exists
-    #TODO: Modify transaction IDs so that they're hashes of transactions
 
     if proof > 0:   #if proof_of_work() returned the correct proof
 
@@ -834,7 +810,7 @@ def mine():
             if received_block["proof"] == proof:
                 block_already_exists = True
                 break
-         
+        
 
         
         if not block_already_exists: #if the current node didn't already receive a block from another node which is the same as the one that the current node mined
@@ -1140,13 +1116,10 @@ def propagate():
                 #             print(f">>>>>> {node_response.json()=}")
                 #         except ConnectionError:
                 #             print(f"{node} is unavailable")
-                
-                # print(f"{50*'k\n'}pre-'mine()': {blockchain.current_transactions=}")
 
-                if len(blockchain.current_transactions) > 0: #if the current transactions weren't already put into a block that we received from a broadcast
-                    mine()
-                    consensus()
-               
+                mine()
+                consensus()
+
             else:
 
                 print(f"\n-\n-\n-\n-\n-\n{valid_transaction=}\n-\n-\n-\n-\n-\n")
