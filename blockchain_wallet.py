@@ -309,7 +309,7 @@ class Wallet:
                 rs = [grequests.get(f"http://{node}/chain")]
                 responses = grequests.map(rs)
 
-                response = responses[0]
+                response = responses[0] #TODO: selects first chain in responses, it should instead select the longest chain
 
                 if response.status_code == 200:
                     length = response.json()['length']

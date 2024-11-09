@@ -208,11 +208,13 @@ class Wallet{
 
 
 
-    updateBalance(){
+    async updateBalance(){
         console.log("this.nodes=" + this.nodes)
         console.log("this.nodes.size=" + this.nodes.size)
         console.log("this.nodes.values()=" + this.nodes.values())        
         
+        let urls = []
+
         let nodesIterator = this.nodes.values()
 
         let node = ""
@@ -223,13 +225,39 @@ class Wallet{
 
             console.log("node=" + node)
 
-            try{
-                
-            }
-            catch(err){
+            urls.push(axios.get("http://" + node + "/chain"))
 
-            }
+            
         }
+
+       let theResponses = await axios.all(urls).then(axios.spread((...responses) =>{
+
+            // console.log('responses.length=' + responses.length)
+            // for (let r = 0; r < responses.length; r++){
+            //     console.log('**************')
+            //     console.log(responses[r])
+            //     console.log('%%%%%%%%%%%%%%')
+            //     console.log("\n\n\n")
+          
+            // }
+
+            return responses
+
+
+       })).catch(errors => {
+        console.error(errors)
+       })
+
+       console.log("theResponses=" + theResponses)
+       for (let q = 0; q < theResponses.length; q++){
+        console.log("]" + q + "[")
+        console.log(theResponses[q])
+
+       }
+
+       
+
+        
 
     }
     
@@ -337,13 +365,13 @@ wallet.address = "8c01184582174ce19b01aa31e26c6a1f"
 wallet.nodes = new Set(["127.0.0.1:5122", "127.0.0.1:5138", "127.0.0.1:5142", "127.0.0.1:5126", "127.0.0.1:5130", "127.0.0.1:5146", "127.0.0.1:5134"])
 wallet.readChain(testChain)
 
-// wallet.updateBalance()
+wallet.updateBalance()
 // wallet.requestTest()
 
 
 
 // wallet.createWalletFile("mbembe")
 
-console.log("wallet.requestMapTest()")
-wallet.requestMapTest()
-console.log("wallet.requestMapTest()")
+// console.log("wallet.requestMapTest()")
+// wallet.requestMapTest()
+// console.log("wallet.requestMapTest()")
