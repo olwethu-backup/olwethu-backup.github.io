@@ -80,7 +80,7 @@ class Wallet:
 
     def send(self, address, amount):
 
-        wallet.update_balance()
+        self.update_balance()
 
 
 

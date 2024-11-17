@@ -227,6 +227,27 @@ class BlockChain:
                 responses = grequests.map(rs)
                 response = responses[0]
                 
+                print(f"{responses=}")
+                print(f"{response=}")
+                
+                idx = 0
+
+                if response is None: #TODO:figure out why this has recently been returning None
+                    
+                    print(f"------------->???{node} is unavailable [blockchain.resolve_conflicts()]")
+                    continue
+
+                    # while idx < len(responses):
+                    #     print(f"{responses[idx]=}")
+                    #     if responses[idx] is not None:
+                    #         response = responses[idx]
+                    #         print('BREAK --------------------')
+                    #         break
+                    #     idx += 1
+
+
+
+
                 print(f'======\n{node}\n======')
                 if response.status_code == 200:
 
