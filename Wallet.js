@@ -281,6 +281,15 @@ class Wallet{
 
         // console.log("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[")
 
+        this.available -= amount
+        this.pending += amount
+
+        this.total = this.available + this.pending
+
+
+        console.log(response['message'])
+        console.log('\n\n')
+        console.log(response['values'])
 
 
 
@@ -577,7 +586,7 @@ class Wallet{
             console.log("RESPONSES = " + responses)
             
             console.log("______________________________________")
-            
+
             return responses
             
 
