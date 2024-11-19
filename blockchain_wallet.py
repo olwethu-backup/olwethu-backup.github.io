@@ -411,7 +411,7 @@ def register_offline(username = "", password = ""):
 
 
     
-    port_file = open("port_counter.txt", "r")
+    port_file = open("port_counter.txt", "r") #TODO: the wallet doesn't actually need to run on a dedicated port
     port_data = int(port_file.read())
     # print("fourfourfourfourfourfourfourfourfourfour")
    

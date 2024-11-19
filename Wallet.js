@@ -3,6 +3,9 @@ const axios = require("axios").default
 
 const uuid =  require('uuid')
 
+const readline = require("node:readline")
+
+const sjcl = require("sjcl")
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -110,8 +113,12 @@ class Wallet{
 
             console.log("done")
         })
+    
     }
-    updateFile(field, data){
+
+
+
+    updateFileMultipleFields(dataMap, theUsername = ""){
         
         
         // let myUUID = uuid.v4().replaceAll("-", "")
@@ -121,10 +128,89 @@ class Wallet{
 
         let walletStr= ""
         let walletDict = ""
+        if (theUsername == ""){
+            theUsername = this.username
+        }
 
-        fs.readFile(this.username + "_wallet.json", (err, inputD) => {
+        fs.readFile(theUsername + "_wallet.json", (err, inputD) => {
+            
+            console.log("this.username (updateFile) = " + theUsername)
+            // console.log('err = ' + err)
+
+            
+
+            if (err){
+                throw err;
+            }
+
+
+
+            // console.log("inputD (updateFile) " + field + " = " + inputD)
+            walletStr += inputD.toString()
+            // console.log("inputD.toString() (updateFile) " + field + " = " + inputD.toString())
+
+            // console.log("walletStr (updateFile) " + field + " = " + walletStr)
+
+            walletDict = JSON.parse(walletStr)
+
+            
+
+            console.log("---------------------------")
+        
+            // console.log(walletDict['nodes'])
+
+            console.log("walletDict 1 = " + walletDict)
+            console.log("")
+            
+            for (var [key, value] of dataMap){
+                console.log("###############" + key + "###############")
+                walletDict[key] = value
+                console.log("walletDict[" + key + "] = " + value)
+            }
+            
+            console.log("walletDict 2 = " + walletDict)
+            // walletDict[field] = data
+            
+            
+
+            walletStr = JSON.stringify(walletDict)
+
+            console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
+            console.log("walletStr 2 (updateFile) = " + walletStr)
+            console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
+           
+            
+            fs.writeFile(theUsername + "_wallet.json", walletStr, (err) => {
+                if (err){
+                    throw err;
+                }
+                else{
+                    console.log("updated '" + theUsername + "_wallet.json")
+                }
+            })
+
+            console.log("done")
+        })
+      
+    }
+
+    updateFile(field, data, theUsername = ""){
+        
+        
+        // let myUUID = uuid.v4().replaceAll("-", "")
+        // console.log("UUID = " + myUUID)
+
+
+
+        let walletStr= ""
+        let walletDict = ""
+        if (theUsername == ""){
+            theUsername = this.username
+        }
+
+        fs.readFile(theUsername + "_wallet.json", (err, inputD) => {
             console.log("###############" + field + "###############")
-            console.log("this.username (updateFile) = " + this.username)
+            console.log("this.username (updateFile) = " + theUsername)
             // console.log('err = ' + err)
 
             
@@ -145,8 +231,10 @@ class Wallet{
 
             console.log("---------------------------")
         
-            console.log(walletDict['nodes'])
+            // console.log(walletDict['nodes'])
 
+            console.log("walletDict = " + walletDict)
+            console.log("")
             walletDict[field] = data
             
 
@@ -157,12 +245,12 @@ class Wallet{
             console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
            
             
-            fs.writeFile(this.username + "_wallet.json", walletStr, (err) => {
+            fs.writeFile(theUsername + "_wallet.json", walletStr, (err) => {
                 if (err){
                     throw err;
                 }
                 else{
-                    console.log("updated '" + field + "' of " + this.username + "_wallet.json")
+                    console.log("updated '" + field + "' of " + theUsername + "_wallet.json")
                 }
             })
 
@@ -171,6 +259,83 @@ class Wallet{
       
     }
 
+
+
+    updateFile(field, data, theUsername = ""){
+        
+        
+        // let myUUID = uuid.v4().replaceAll("-", "")
+        // console.log("UUID = " + myUUID)
+
+
+
+        let walletStr= ""
+        let walletDict = ""
+        
+        console.log("theUsername = " + theUsername)
+
+        if (theUsername == ""){
+            theUsername = this.username
+        }
+
+        console.log("theUsername = " + theUsername)
+
+
+        fs.readFile(theUsername + "_wallet.json", (err, inputD) => {
+            console.log("###############" + field + "###############")
+            console.log("theUsername (updateFile) = " + theUsername)
+            // console.log('err = ' + err)
+
+            
+
+            if (err){
+                throw err
+            }
+
+
+
+            console.log("inputD (updateFile) " + field + " = " + inputD)
+            walletStr += inputD.toString()
+            console.log("inputD.toString() (updateFile) " + field + " = " + inputD.toString())
+
+            console.log("walletStr (updateFile) " + field + " = " + walletStr)
+
+            walletDict = JSON.parse(walletStr)
+
+            console.log("---------------------------")
+
+            console.log("walletDict 1 = ")
+        
+            // console.log(walletDict['nodes'])
+
+            Object.keys(walletDict).forEach((prop)=> console.log(prop))
+
+            walletDict[field] = data
+
+            console.log("walletDict 2 = ")
+            Object.keys(walletDict).forEach((prop)=> console.log(prop))
+
+
+            walletStr = JSON.stringify(walletDict)
+
+            console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
+            console.log("walletStr = " + walletStr)
+            console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
+           
+            
+            fs.writeFile(theUsername + "_wallet.json", walletStr, (err) => {
+                if (err){
+                    throw err;
+                }
+                else{
+                    console.log("updated '" + field + "' of " + theUsername + "_wallet.json")
+                }
+            })
+
+            console.log("done")
+        })
+      
+    }
 
     saveTransactions(){
 
@@ -673,31 +838,196 @@ class Wallet{
         
     }
 
+}
+
+
+let wallet = new Wallet()
+
+function registerOffline(username = "", password = ""){
+
+    // Receives a username and password, will automatically generate an address for this account.
+
+    console.log("\n\n")
+    console.log("============REGISTER============")
+    console.log("\n\n")
+
+    // const rl = readline.createInterface({
+    //     input: process.stdin,
+    //     output: process.stdout,
+    // })
+
+    // if (username == "" && password == ""){
+    //     username = rl.question(`username: `, name => {
+    //         console.log("name = " + name)
+    //         console.log("question was answered")
+    //         rl.close()
+    //         return name
+    //     })
+
+        // username = "graeber"
+        // password = "password"
+        
+        console.log("password = " + password)
+
+        let passwordBitArray = sjcl.hash.sha256.hash(password)
+        
+        console.log("passwordBitArray = " + passwordBitArray)
+
+        
+        let passwordHash = sjcl.codec.hex.fromBits(passwordBitArray)
+
+        console.log("passwordHash = " + passwordHash)
+
+        let walletInfo = {
+            "username": username,
+            "port": -1, //TODO: Dedicated port is no longer necessary
+            "password": passwordHash,
+            "address": uuid.v4().replaceAll("-", ""),
+            "available balance": 0,
+            "pending balance": 0,
+            "total balance": 0,
+            "nodes": [],
+            "past_transactions": []
+        }
+
+        wallet.createWalletFile(username)
+
+    //     let sleepMs = 10000
+
+    //    console.log("(updateBalance) Sleeping for " + sleepMs + "ms...")
+    //    await sleep(sleepMs)
+    //    console.log("(updateBalance) Done sleeping")
+
+        let walletMap = new Map(Object.entries(walletInfo))
+
+        wallet.updateFileMultipleFields(walletMap, username)
+
+       
+        let response = {
+            "message": "Wallet " + walletInfo["username"] + " created",
+            "address": walletInfo["address"]
+        }
+
+        console.log(response["message"])
+        console.log("address: " + response["address"])
+
+        // console.log("typeof(passwordHash) = " + typeof(passwordHash))
+        
+
+        
+
+        // console.log("username = " + username)
+
+        // password = prompt("password: ")
+
+
+        
+    }
+
+function loginOffline(username = "", password = ""){
+    let walletStr = ""
+    let walletDict = ""
+    
+    console.log("password = " + password)
+
+    let passwordBitArray = sjcl.hash.sha256.hash(password)
+    
+    console.log("passwordBitArray = " + passwordBitArray)
+
+    
+    let passwordHash = sjcl.codec.hex.fromBits(passwordBitArray)
+
+    console.log("passwordHash = " + passwordHash)
+
+    fs.readFile(username + "_wallet.json", (err, inputD) => {
+        console.log("theUsername (loginOffline) = ")
+
+        if (err){
+
+            console.log("File reading error: it is possible that your username or password is incorrect")
+
+            throw err
+        }
+
+        console.log("inputD (loginOffline) " + " = " + inputD)
+
+
+        walletStr += inputD.toString()
+
+        console.log("inputD.toString() (loginOffline) = " + inputD.toString())
+
+        console.log("walletStr (loginOffline) = " + walletStr)
+
+        walletDict = JSON.parse(walletStr)
+        if (passwordHash == walletDict["password"]){
+        wallet.username = username
+        wallet.port = walletDict["port"]
+        wallet.address = walletDict["address"]
+        wallet.available = walletDict["available balance"]
+        wallet.pending = walletDict["pending balance"]
+        wallet.total = walletDict["total balance"]
+        wallet.nodes = new Set(walletDict["nodes"])
+        wallet.pastTransactions = walletDict["past_transactions"]
+
+        wallet.updateBalance()
+
+        console.log("Login successful")
+        console.log("      details:")
+        console.log("         available balance :" + walletDict["available balance"])
+        console.log("         pending balance :" + walletDict["pending balance"])
+        console.log("         total balance :" + walletDict["total balance"])
+
+        }
+        else{
+            console.log("---> File reading error: it is possible that your username or password is incorrect")
+
+        }   
+
+
+
+
+    })
+
+
 
 
 
 }
 
-wallet = new Wallet()
-
-wallet.username = "graeber"
-
-// wallet.saveTransactions()
 
 
-let testChain = [{"index": 1, "timestamp": 1730480510.3574343, "transactions": [], "proof": 100, "previous_hash": 1}, {"index": 2, "timestamp": 1730480629.2533815, "transactions": [{"sender": "f2f6155aeb5343a594ed23b26f95fae6", "recipient": "test_x", "amount": "0.0", "transaction_id": "8ae9fc367855461c992bbb2758f6f6b4"}, {"sender": "0", "recipient": "8c01184582174ce19b01aa31e26c6a1f", "amount": 1, "transaction_id": "29d8ba27ac1e492685e5597c9bea350f"}], "proof": 888273, "previous_hash": "6e90578eded256a98e8e1112132be099045371d936b37428d504bb5554c60d68"}]
-// wallet.address = "8c01184582174ce19b01aa31e26c6a1f"
 
-wallet.address = "861ab4092eb64d5ebbbad64302319c99"
-wallet.nodes = new Set(["127.0.0.1:5122", "127.0.0.1:5138", "127.0.0.1:5142", "127.0.0.1:5126", "127.0.0.1:5130", "127.0.0.1:5146", "127.0.0.1:5134"])
+
+
+
+
+
+
+
+
+// +
+
+// wallet.username = "graeber"
+
+// // wallet.saveTransactions()
+
+
+// let testChain = [{"index": 1, "timestamp": 1730480510.3574343, "transactions": [], "proof": 100, "previous_hash": 1}, {"index": 2, "timestamp": 1730480629.2533815, "transactions": [{"sender": "f2f6155aeb5343a594ed23b26f95fae6", "recipient": "test_x", "amount": "0.0", "transaction_id": "8ae9fc367855461c992bbb2758f6f6b4"}, {"sender": "0", "recipient": "8c01184582174ce19b01aa31e26c6a1f", "amount": 1, "transaction_id": "29d8ba27ac1e492685e5597c9bea350f"}], "proof": 888273, "previous_hash": "6e90578eded256a98e8e1112132be099045371d936b37428d504bb5554c60d68"}]
+// // wallet.address = "8c01184582174ce19b01aa31e26c6a1f"
+
+// wallet.address = "861ab4092eb64d5ebbbad64302319c99"
+// wallet.nodes = new Set(["127.0.0.1:5122", "127.0.0.1:5138", "127.0.0.1:5142", "127.0.0.1:5126", "127.0.0.1:5130", "127.0.0.1:5146", "127.0.0.1:5134"])
+
+// +
+
 
 //---------------------------
 
-wallet.readChain(testChain)
+// wallet.readChain(testChain)
 
-wallet.updateBalance()
+// wallet.updateBalance()
 
-wallet.send("test", 0)
+// wallet.send("test", 0)
 
 //---------------------------
 
@@ -718,3 +1048,10 @@ wallet.send("test", 0)
 // console.log("wallet.requestMapTest()")
 // wallet.requestMapTest()
 // console.log("wallet.requestMapTest()")
+
+
+// registerOffline("endnotes", "password")
+
+loginOffline("endnotes", "password")
+
+
