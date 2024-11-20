@@ -276,6 +276,9 @@ class Wallet{
 
         if (theUsername == ""){
             theUsername = this.username
+            console.log("}}}}}}}}}}}}}}}}}}}}}}}}}}")
+            console.log("this.username = " + this.username)
+            console.log("{{{{{{{{{{{{{{{{{{{{{{{{{{")
         }
 
         console.log("theUsername = " + theUsername)
@@ -380,6 +383,22 @@ class Wallet{
         })
       
     }
+
+   async registerNode(nodes){
+        let sleepMs = 10000
+
+        console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
+        await sleep(sleepMs)
+        console.log("(loginOffline) Done sleeping")
+        
+        this.updateFile("nodes", nodes)
+
+        console.log("nodes successfully registered")
+        console.log("nodes = " + nodes)
+
+
+    }
+
 
     async send(address, amount){
 
@@ -565,6 +584,17 @@ class Wallet{
         console.log("this.nodes.size=" + this.nodes.size)
         console.log("this.nodes.values()=" + this.nodes.values())        
         
+        if (this.nodes.size == 0){
+            console.log("this.nodes.size == 0")
+            console.log("No available nodes to get blockchain data from. Register some nodes to be able to update your balance.")    
+            return
+        }
+
+        if (this.nodes.size < 0){
+            console.log("this.nodes.size < 0 (HOW?!?!??!)")
+            return
+        }
+
         
 
 
@@ -612,10 +642,12 @@ class Wallet{
     //     console.log("]" + q + "[")
     //     console.log(theResponses[q])
 
-    //    }
+    //    }         
 
+       console.log("theResponses = " + theResponses)
        let response = theResponses[0] //TODO: modify this to seek the longest chain that was provided
 
+       console.log("response = " + response)
        console.log("status=" + response["status"])
        console.log("status type: " + typeof(response["status"]))
 
@@ -924,7 +956,7 @@ function registerOffline(username = "", password = ""){
         
     }
 
-function loginOffline(username = "", password = ""){
+async function loginOffline(username = "", password = ""){
     let walletStr = ""
     let walletDict = ""
     
@@ -959,6 +991,8 @@ function loginOffline(username = "", password = ""){
         console.log("walletStr (loginOffline) = " + walletStr)
 
         walletDict = JSON.parse(walletStr)
+
+        // return walletDict
         if (passwordHash == walletDict["password"]){
         wallet.username = username
         wallet.port = walletDict["port"]
@@ -972,7 +1006,8 @@ function loginOffline(username = "", password = ""){
         wallet.updateBalance()
 
         console.log("Login successful")
-        console.log("      details:")
+        console.log("[" + wallet.username + "]" + "      details:")
+        
         console.log("         available balance :" + walletDict["available balance"])
         console.log("         pending balance :" + walletDict["pending balance"])
         console.log("         total balance :" + walletDict["total balance"])
@@ -984,9 +1019,34 @@ function loginOffline(username = "", password = ""){
         }   
 
 
+        
+ 
+
+        console.log("(((walletStr = " + walletStr)
+
+        console.log("(((walletDict = " + walletDict)
 
 
-    })
+
+
+    }
+
+    
+)
+
+
+let sleepMs = 10000
+
+console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
+await sleep(sleepMs)
+console.log("(loginOffline) Done sleeping")
+ 
+
+console.log("ppppppppppppppp  " + walletDict + "  ppppppppppppppp" )
+
+console.log("ooooooooooooooo  " + walletDict + "  ooooooooooooooo" )
+
+console.log("popoppo   " + wallet.username + "   popoppo")
 
 
 
@@ -1053,5 +1113,7 @@ function loginOffline(username = "", password = ""){
 // registerOffline("endnotes", "password")
 
 loginOffline("endnotes", "password")
+console.log("__lolo_" + wallet.username + "__lolo_")
+wallet.registerNode(["127.0.0.1:5122","127.0.0.1:5138","127.0.0.1:5118","127.0.0.1:5126","127.0.0.1:5130","127.0.0.1:5146","127.0.0.1:5134"])
 
 
