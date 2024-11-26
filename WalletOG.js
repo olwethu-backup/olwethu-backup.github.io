@@ -1,5 +1,11 @@
-// const fs = require("fs")
- 
+const fs = require("fs")
+const axios = require("axios").default
+
+const uuid =  require('uuid')
+
+const readline = require("node:readline")
+
+const sjcl = require("sjcl")
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -13,8 +19,7 @@ class Wallet{
 
     constructor(){
         this.username = ''
-
-        this.address = uuidv4().replaceAll("-", "")
+        this.address = uuid.v4().replaceAll("-", "")
         this.available = 0
         this.pending = 0
         this.total = this.available + this.pending
@@ -116,7 +121,7 @@ class Wallet{
     updateFileMultipleFields(dataMap, theUsername = ""){
         
         
-        // let myUUID = uuidv4().replaceAll("-", "")
+        // let myUUID = uuid.v4().replaceAll("-", "")
         // console.log("UUID = " + myUUID)
 
 
@@ -192,7 +197,7 @@ class Wallet{
     updateFile(field, data, theUsername = ""){
         
         
-        // let myUUID = uuidv4().replaceAll("-", "")
+        // let myUUID = uuid.v4().replaceAll("-", "")
         // console.log("UUID = " + myUUID)
 
 
@@ -259,7 +264,7 @@ class Wallet{
     updateFile(field, data, theUsername = ""){
         
         
-        // let myUUID = uuidv4().replaceAll("-", "")
+        // let myUUID = uuid.v4().replaceAll("-", "")
         // console.log("UUID = " + myUUID)
 
 
@@ -413,7 +418,7 @@ class Wallet{
             "amount": amount
         }
 
-        valuesObject["transaction_id"] = uuidv4().replaceAll("-", "")
+        valuesObject["transaction_id"] = uuid.v4().replaceAll("-", "")
         valuesObject["sender"] = this.address
         valuesObject["status"] = "pending"
 
@@ -896,12 +901,12 @@ function registerOffline(username = "", password = ""){
         
         console.log("password = " + password)
 
-        let passwordBitArray = hash.sha256.hash(password)
+        let passwordBitArray = sjcl.hash.sha256.hash(password)
         
         console.log("passwordBitArray = " + passwordBitArray)
 
         
-        let passwordHash = codec.hex.fromBits(passwordBitArray)
+        let passwordHash = sjcl.codec.hex.fromBits(passwordBitArray)
 
         console.log("passwordHash = " + passwordHash)
 
@@ -909,7 +914,7 @@ function registerOffline(username = "", password = ""){
             "username": username,
             "port": -1, //TODO: Dedicated port is no longer necessary
             "password": passwordHash,
-            "address": uuidv4().replaceAll("-", ""),
+            "address": uuid.v4().replaceAll("-", ""),
             "available balance": 0,
             "pending balance": 0,
             "total balance": 0,
@@ -957,12 +962,12 @@ async function loginOffline(username = "", password = ""){
     
     console.log("password = " + password)
 
-    let passwordBitArray = hash.sha256.hash(password)
+    let passwordBitArray = sjcl.hash.sha256.hash(password)
     
     console.log("passwordBitArray = " + passwordBitArray)
 
     
-    let passwordHash = codec.hex.fromBits(passwordBitArray)
+    let passwordHash = sjcl.codec.hex.fromBits(passwordBitArray)
 
     console.log("passwordHash = " + passwordHash)
 
@@ -1062,16 +1067,16 @@ console.log("popoppo   " + wallet.username + "   popoppo")
 
 // +
 
-wallet.username = "graeber"
+// wallet.username = "graeber"
 
 // // wallet.saveTransactions()
 
 
 // let testChain = [{"index": 1, "timestamp": 1730480510.3574343, "transactions": [], "proof": 100, "previous_hash": 1}, {"index": 2, "timestamp": 1730480629.2533815, "transactions": [{"sender": "f2f6155aeb5343a594ed23b26f95fae6", "recipient": "test_x", "amount": "0.0", "transaction_id": "8ae9fc367855461c992bbb2758f6f6b4"}, {"sender": "0", "recipient": "8c01184582174ce19b01aa31e26c6a1f", "amount": 1, "transaction_id": "29d8ba27ac1e492685e5597c9bea350f"}], "proof": 888273, "previous_hash": "6e90578eded256a98e8e1112132be099045371d936b37428d504bb5554c60d68"}]
-wallet.address = "8c01184582174ce19b01aa31e26c6a1f"
+// // wallet.address = "8c01184582174ce19b01aa31e26c6a1f"
 
 // wallet.address = "861ab4092eb64d5ebbbad64302319c99"
-wallet.nodes = new Set(["127.0.0.1:5122", "127.0.0.1:5138", "127.0.0.1:5142", "127.0.0.1:5126", "127.0.0.1:5130", "127.0.0.1:5146", "127.0.0.1:5134"])
+// wallet.nodes = new Set(["127.0.0.1:5122", "127.0.0.1:5138", "127.0.0.1:5142", "127.0.0.1:5126", "127.0.0.1:5130", "127.0.0.1:5146", "127.0.0.1:5134"])
 
 // +
 
@@ -1107,24 +1112,8 @@ wallet.nodes = new Set(["127.0.0.1:5122", "127.0.0.1:5138", "127.0.0.1:5142", "1
 
 // registerOffline("endnotes", "password")
 
-
-
-            
-
-
-              
-
-
-
-
-
-
-
-
-
-
-// loginOffline("endnotes", "password")
-// console.log("__lolo_" + wallet.username + "__lolo_")
-// wallet.registerNode(["127.0.0.1:5122","127.0.0.1:5138","127.0.0.1:5118","127.0.0.1:5126","127.0.0.1:5130","127.0.0.1:5146","127.0.0.1:5134"])
+loginOffline("endnotes", "password")
+console.log("__lolo_" + wallet.username + "__lolo_")
+wallet.registerNode(["127.0.0.1:5122","127.0.0.1:5138","127.0.0.1:5118","127.0.0.1:5126","127.0.0.1:5130","127.0.0.1:5146","127.0.0.1:5134"])
 
 

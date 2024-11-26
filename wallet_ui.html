@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet UI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    button {
+      margin: 10px 0;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .balances {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    .balances div {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wallet Interface</h1>
+
+  
+<!--   
+  <script type="module">
+    import axios from 'https://cdn.skypack.dev/axios'
+  </script>
+
+
+  <script type="module">
+    import uuid from 'https://cdn.skypack.dev/uuid'
+    console.log("[uuid]")
+    console.log("typeof(uuid) = " + typeof(uuid))
+  </script> -->
+
+  <!-- <script type="module">
+    import { hash, codec } from "sjcl"
+    </script> -->
+              
+
+
+
+<!-- <script type="module">
+  // import axios from 'https://cdn.skypack.dev/axios';
+  // import uuid from 'https://cdn.skypack.dev/uuid';
+
+    // console.log("_____>uuid<_____")
+    // console.log("typeof(uuid) = " + typeof(uuid))
+//   import { hash, codec } from "sjcl"
+  // Import Wallet.js after dependencies are loaded
+  // import Wallet from './Wallet.js'
+
+  // console.log("Wallet = " + Wallet)
+  // console.log("typeof(Wallet) = " + typeof(Wallet))
+
+  // Example: Initialize wallet
+//   const wallet = new Wallet('username', 'password');
+//   console.log(wallet);
+</script> -->
+
+<!-- <script src="Wallet.js"></script> -->
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/uuid/dist/umd/uuidv4.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/sjcl/sjcl.js"></script> -->
+
+<script src="https://cdn.jsdelivr.net/npm/sjcl@1.0.8/sjcl.min.js"></script>
+
+<script src="Wallet.js"></script>
+
+  <div class="balances">
+    <h2>Balances</h2>
+    <div>Available: <span id="available-balance">0</span></div>
+    <div>Pending: <span id="pending-balance">0</span></div>
+    <div>Total: <span id="total-balance">0</span></div>
+  </div>
+
+  <button onclick="wallet.send('test_yyy', 0)">Send</button>
+  <button onclick="wallet.updateBalance()">Update Balance</button>
+  <button onclick="wallet.registerNode()">Register New Nodes</button>
+
+  
+</body>
+</html>
