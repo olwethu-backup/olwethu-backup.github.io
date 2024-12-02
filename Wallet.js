@@ -38,8 +38,16 @@ class Wallet{
     }
 
     saveTransaction(transactionMap){
+        console.log("transactionMap [saveTransaction()] = " + transactionMap)
+
+        for (var [key, value] of transactionMap){
+            console.log(key + " => " + value)
+        }
+
+        console.log("Object.fromEntries(transactionMap) = " + Object.fromEntries(transactionMap))
+
         let transaction =  Object.fromEntries(transactionMap)
-        console.log("transaction = "+ + transaction)
+        console.log("transaction = " +  transaction)
 
         let walletStr= ""
         let walletDict = ""
@@ -446,7 +454,7 @@ class Wallet{
 
 
         this.pastTransactions.set(valuesDict.get("transaction_id"), valuesDict)
-
+        console.log("valuesDict [send()] = " + valuesDict)
         this.saveTransaction(valuesDict)
 
         console.log("this.nodes=" + this.nodes)

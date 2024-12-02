@@ -9,6 +9,7 @@ import hashlib
 from uuid import uuid4
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from urllib.parse import urlparse
 
 import threading
@@ -655,6 +656,7 @@ class BlockChain:
 #Instantiating a node with a blockchain API endpoint
 
 app = Flask(__name__)
+CORS(app)
 
 # Generate a globally unique address for this node
 
