@@ -1229,84 +1229,114 @@ async function loginOffline(username = "", password = ""){
     let walletStr = ""
     let walletDict = ""
     
+   
+
+    const dbName = username + "_wallet"
+
+    console.log("000000" + dbName + "000000")
+
+    const request = indexedDB.open(dbName, 1)
 
 
+
+    request.onsuccess = (event) => {
+
+        console.log("event.target.result = " + event.target.result)
+        
+        
+        let db = event.target.result
+
+        console.log("db = " + db)
+
+        console.log("password = " + password)
+
+        let passwordBitArray = sjcl.hash.sha256.hash(password)
+        
+        console.log("passwordBitArray = " + passwordBitArray)
     
-
-
-    console.log("password = " + password)
-
-    let passwordBitArray = hash.sha256.hash(password)
+        
+        let passwordHash = sjcl.codec.hex.fromBits(passwordBitArray)
     
-    console.log("passwordBitArray = " + passwordBitArray)
+        console.log("passwordHash = " + passwordHash)
 
+
+
+        console.log("----------------><-------]")
+        
+        console.log()
+        
+        console.log(db)
+        console.log("TYPEOF(username) = " + typeof(username))
+        console.log("username = " + username)
+
+
+
+            console.log("db.address = " + db.address)
+
+
+            
+            let transaction = db.transaction(username)
+            let objectStore = transaction.objectStore(username)
+            let request2 = objectStore.get(username)
+
+            request2.onerror = (event) => {
+                  // Handle errors
+                    console.error("ERROR IN REQUEST2 in loginOffline()")
+                };
+                request2.onsuccess = (event) => {
+                  // Do something with the request.result!
     
-    let passwordHash = codec.hex.fromBits(passwordBitArray)
+                  console.log(`wallet encrypted password is ${request2.result.data.password}`);
 
-    console.log("passwordHash = " + passwordHash)
+                  if (passwordHash != request2.result.data.password){
+                    console.log("username or password is incorrect")
 
-    fs.readFile(username + "_wallet.json", (err, inputD) => {
-        console.log("theUsername (loginOffline) = ")
 
-        if (err){
+                                
+                }
 
-            console.log("File reading error: it is possible that your username or password is incorrect")
+                else{
+                    console.log("username and password are correct")
 
-            throw err
+                    wallet.username = username
+                    console.log(`[wallet.username] = ${username}`)
+                    wallet.port = request2.result.data.port
+                    console.log(`[wallet.port] = ${request2.result.data.port}`)
+                    wallet.address = request2.result.data.address
+                    console.log(`[wallet.address] = ${request2.result.data.address}`)
+                    wallet.available = request2.result.data["available balance"]
+                    console.log(`[wallet.available] = ${request2.result.data["available balance"]}`)
+                    wallet.pending = request2.result.data["pending balance"]
+                    console.log(`[wallet.pending] = ${request2.result.data["pending balance"]}`)
+                    wallet.total = request2.result.data["total balance"]
+                    console.log(`[wallet.total] = ${request2.result.data["total balance"]}`)
+                    wallet.nodes = new Set(request2.result.data.nodes)
+                    console.log(`[wallet.nodes] = ${new Set(request2.result.data.nodes)}`)
+                    wallet.pastTransactions = request2.result.data.past_transactions
+                    console.log(`[wallet.pastTransactions] = ${request2.result.data.past_transactions}`)
+
+                    wallet.updateBalance()
+
+                    console.log("Login successful")
+                    console.log("[" + wallet.username + "]" + "      details:")
+                    
+                    console.log("         available balance :" + wallet.available)
+                    console.log("         pending balance :" + wallet.pending)
+                    console.log("         total balance :" + wallet.total)
+
+
+                }
+
+
+                };
+    
+        
         }
 
-        console.log("inputD (loginOffline) " + " = " + inputD)
-
-
-        walletStr += inputD.toString()
-
-        console.log("inputD.toString() (loginOffline) = " + inputD.toString())
-
-        console.log("walletStr (loginOffline) = " + walletStr)
-
-        walletDict = JSON.parse(walletStr)
-
-        // return walletDict
-        if (passwordHash == walletDict["password"]){
-        wallet.username = username
-        wallet.port = walletDict["port"]
-        wallet.address = walletDict["address"]
-        wallet.available = walletDict["available balance"]
-        wallet.pending = walletDict["pending balance"]
-        wallet.total = walletDict["total balance"]
-        wallet.nodes = new Set(walletDict["nodes"])
-        wallet.pastTransactions = walletDict["past_transactions"]
-
-        wallet.updateBalance()
-
-        console.log("Login successful")
-        console.log("[" + wallet.username + "]" + "      details:")
-        
-        console.log("         available balance :" + walletDict["available balance"])
-        console.log("         pending balance :" + walletDict["pending balance"])
-        console.log("         total balance :" + walletDict["total balance"])
-
+        request.onerror = (event) => {
+            console.error("request (loginOffline) ERROR!!")
         }
-        else{
-            console.log("---> File reading error: it is possible that your username or password is incorrect")
-
-        }   
-
-
         
- 
-
-        console.log("(((walletStr = " + walletStr)
-
-        console.log("(((walletDict = " + walletDict)
-
-
-
-
-    }
-
-    
-)
 
 
 let sleepMs = 10000
