@@ -1,6 +1,3 @@
-// const fs = require("fs")
- 
-
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -26,15 +23,7 @@ class Wallet{
 
     createWalletFile(username){
 
-        // let walletDict = "{}"
-        // fs.writeFile(username + "_wallet.json", walletDict, (err) => {
-        //             if (err) {
-        //                 throw err;
-        //             }
-        //             else{
-        //                 console.log("updated " + username + "_wallet.json")
-        //             }
-        // })
+        
 
         let walletTemplate = {"address": "placeholder", "password": "placeholder", "available balance": 0, "pending balance": 0, "total balance": 0, "nodes": [], "port": -1, "past_transactions": {}}
        
@@ -115,85 +104,22 @@ class Wallet{
             console.log(key + " => " + value)
         }
 
+
+        this.updateFile("past_transactions", Object.fromEntries(transactionMap))
         console.log("Object.fromEntries(transactionMap) = " + Object.fromEntries(transactionMap))
 
-        let transaction =  Object.fromEntries(transactionMap)
-        console.log("transaction = " +  transaction)
-
-        let walletStr= ""
-        let walletDict = ""
-        fs.readFile(this.username + "_wallet.json", (err, inputD) => {
-                
-            if (err){
-                throw err;
-            }
-
-            // console.log("this.username (saveTransaction) = " + this.username)
-            // console.log("inputD = " + inputD)
-
-            walletStr += inputD.toString()
-
-            // console.log("walletStr (saveTransaction 1) = " + walletStr)
-            // console.log(inputD.toString())
-            walletDict = JSON.parse(walletStr)
-
-            // console.log("---------------------------")
-            // console.log("transaction = " + transaction)
-        
-            // console.log(walletDict['nodes'])
-
-            // walletDict["past_transactions"] = this.pastTransactions
-            let tempPastTransactions = walletDict["past_transactions"]
-
-            // console.log("tempPastTransactions = " + tempPastTransactions)
-
-            tempPastTransactions[transaction["transaction_id"]] = transaction
-            
-            // console.log("tempPastTransactions = " + tempPastTransactions)
-            
-            // console.log('walletDict["past_transactions"] = ' + walletDict["past_transactions"])
-            // console.log("this.pastTransactions = " + this.pastTransactions)
-
-            walletDict["past_transactions"] = tempPastTransactions
-
-            // console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-----------")
-            // console.log('walletDict["past_transactions"] = ' + walletDict["past_transactions"])
-            // console.log("this.pastTransactions = " + this.pastTransactions)
-            
-            // console.log("walletDict['past_transactions'] = " + walletDict["past_transactions"])
-            // console.log('tempPastTransactions[transaction["transaction_id"]] = ' + tempPastTransactions[transaction["transaction_id"]])
-            
-            // console.log("walletDict['past_transactions'][transaction['transaction_id']] = " + walletDict['past_transactions'][transaction['transaction_id']])
-
-            walletStr = JSON.stringify(walletDict)
-
-            // console.log("\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?")
-            // console.log("walletStr (saveTransaction 2) = " + walletStr)
-            // console.log("\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?")
-
-            // console.log("\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?")
-            // console.log("walletStr (saveTransaction 3) = " + walletStr)
-            // console.log("\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?\n?")
-           
-            
-            fs.writeFile(this.username + "_wallet.json", walletStr, (err) => {
-                if (err){
-                    throw err;
-                }
-                else{
-                    console.log("updated " + this.username + "_wallet.json")
-                }
-            })
-
-            console.log("done")
-        })
-    
     }
 
 
 
     updateFileMultipleFields(dataMap, theUsername = ""){
         
+
+        let walletStr= ""
+        let walletDict = ""
+        if (theUsername == ""){
+            theUsername = this.username
+        }
         
         // let myUUID = uuidv4().replaceAll("-", "")
         // console.log("UUID = " + myUUID)
@@ -214,11 +140,7 @@ class Wallet{
         
 
 
-        let walletStr= ""
-        let walletDict = ""
-        if (theUsername == ""){
-            theUsername = this.username
-        }
+     
 
         let request2 = objectStore.get(theUsername)
 
@@ -264,7 +186,7 @@ class Wallet{
       
     }
 
-    updateFile(field, data, theUsername = ""){
+    updateFile(field, newData, theUsername = ""){
         
         
         // let myUUID = uuidv4().replaceAll("-", "")
@@ -278,179 +200,62 @@ class Wallet{
             theUsername = this.username
         }
 
-        fs.readFile(theUsername + "_wallet.json", (err, inputD) => {
+        let dbName = theUsername + "_wallet"
+
+        let request = indexedDB.open(dbName, 1)
+
+
+        request.onsuccess = (event) => {
             console.log("###############" + field + "###############")
             console.log("this.username (updateFile) = " + theUsername)
             // console.log('err = ' + err)
 
+            let db = request.result
+    
+            let objectStore = db.transaction([theUsername], "readwrite").objectStore(theUsername)
+            
+            
+            let request2 = objectStore.get(theUsername)
+
+            request2.onsuccess = (event) => {
+                let data = event.target.result
             
 
-            if (err){
-                throw err;
+                console.log(`data.data[${field}] old = ` + data.data[field])
+
+                data.data[field] = newData
+            
+                console.log(`data.data[${field}] new = ` + data.data[field])
+                let requestUpdate = objectStore.put(data)
+            
+                requestUpdate.onerror = (event) => {
+                    console.error("ERROR IN requestUpdate")
+                }
+            
+                requestUpdate.onsuccess = (event) => {
+                    console.log("successfully changed wallet content to " + data.data[field])
+                }
+            
             }
-
-
-
-            console.log("inputD (updateFile) " + field + " = " + inputD)
-            walletStr += inputD.toString()
-            console.log("inputD.toString() (updateFile) " + field + " = " + inputD.toString())
-
-            console.log("walletStr (updateFile) " + field + " = " + walletStr)
-
-            walletDict = JSON.parse(walletStr)
-
-            console.log("---------------------------")
         
-            // console.log(walletDict['nodes'])
 
-            console.log("walletDict = " + walletDict)
-            console.log("")
-            walletDict[field] = data
+
             
-
-            walletStr = JSON.stringify(walletDict)
-
-            console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
-            console.log("walletStr = " + walletStr)
-            console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
-           
-            
-            fs.writeFile(theUsername + "_wallet.json", walletStr, (err) => {
-                if (err){
-                    throw err;
-                }
-                else{
-                    console.log("updated '" + field + "' of " + theUsername + "_wallet.json")
-                }
-            })
-
             console.log("done")
-        })
-      
-    }
-
-
-
-    updateFile(field, data, theUsername = ""){
-        
-        
-        // let myUUID = uuidv4().replaceAll("-", "")
-        // console.log("UUID = " + myUUID)
-
-
-
-        let walletStr= ""
-        let walletDict = ""
-        
-        console.log("theUsername = " + theUsername)
-
-        if (theUsername == ""){
-            theUsername = this.username
-            console.log("}}}}}}}}}}}}}}}}}}}}}}}}}}")
-            console.log("this.username = " + this.username)
-            console.log("{{{{{{{{{{{{{{{{{{{{{{{{{{")
         }
-
-        console.log("theUsername = " + theUsername)
-
-
-        fs.readFile(theUsername + "_wallet.json", (err, inputD) => {
-            console.log("###############" + field + "###############")
-            console.log("theUsername (updateFile) = " + theUsername)
-            // console.log('err = ' + err)
-
-            
-
-            if (err){
-                throw err
-            }
-
-
-
-            console.log("inputD (updateFile) " + field + " = " + inputD)
-            walletStr += inputD.toString()
-            console.log("inputD.toString() (updateFile) " + field + " = " + inputD.toString())
-
-            console.log("walletStr (updateFile) " + field + " = " + walletStr)
-
-            walletDict = JSON.parse(walletStr)
-
-            console.log("---------------------------")
-
-            console.log("walletDict 1 = ")
-        
-            // console.log(walletDict['nodes'])
-
-            Object.keys(walletDict).forEach((prop)=> console.log(prop))
-
-            walletDict[field] = data
-
-            console.log("walletDict 2 = ")
-            Object.keys(walletDict).forEach((prop)=> console.log(prop))
-
-
-            walletStr = JSON.stringify(walletDict)
-
-            console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
-            console.log("walletStr = " + walletStr)
-            console.log("\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!")
-           
-            
-            fs.writeFile(theUsername + "_wallet.json", walletStr, (err) => {
-                if (err){
-                    throw err;
-                }
-                else{
-                    console.log("updated '" + field + "' of " + theUsername + "_wallet.json")
-                }
-            })
-
-            console.log("done")
-        })
       
     }
+
+
 
     saveTransactions(){
 
         let walletStr= ""
         let walletDict = ""
-        fs.readFile(this.username + "_wallet.json", (err, inputD) => {
-                
-            if (err){
-                throw err;
-            }
 
-            walletStr += inputD.toString()
-            // console.log("inputD.toString()= ")
-            // console.log(inputD.toString())
-            walletDict = JSON.parse(walletStr)
-            // console.log("\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)")
-            // console.log("---------------------------")
-            
-            // console.log(walletDict['nodes'])
-            // console.log('walletDict["past_transactions"] = ' + walletDict["past_transactions"])
-            // console.log("this.pastTransactions = " + this.pastTransactions)
-            walletDict["past_transactions"] = this.pastTransactions
+        this.updateFile("past_transactions", Object.fromEntries(this.pastTransactions))
 
-            // console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-            // console.log('walletDict["past_transactions"] = ' + walletDict["past_transactions"])
-            // console.log("this.pastTransactions = " + this.pastTransactions)
-            // console.log("\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)")
 
-            walletStr = JSON.stringify(walletDict)
-           
-            
-            fs.writeFile(this.username + "_wallet.json", walletStr, (err) => {
-                if (err){
-                    throw err;
-                }
-                else{
-                    console.log("updated " + this.username + "_wallet.json")
-                }
-            })
-
-            console.log("done")
-        })
       
     }
 
@@ -945,86 +750,6 @@ class Wallet{
 
 let wallet = new Wallet()
 
-function registerOffline_______________(username = "", password = ""){
-
-    // Receives a username and password, will automatically generate an address for this account.
-
-    console.log("\n\n")
-    console.log("============REGISTER============")
-    console.log("\n\n")
-
-    // const rl = readline.createInterface({
-    //     input: process.stdin,
-    //     output: process.stdout,
-    // })
-
-    // if (username == "" && password == ""){
-    //     username = rl.question(`username: `, name => {
-    //         console.log("name = " + name)
-    //         console.log("question was answered")
-    //         rl.close()
-    //         return name
-    //     })
-
-        // username = "graeber"
-        // password = "password"
-        
-        console.log("password = " + password)
-
-        let passwordBitArray = hash.sha256.hash(password)
-        
-        console.log("passwordBitArray = " + passwordBitArray)
-
-        
-        let passwordHash = codec.hex.fromBits(passwordBitArray)
-
-        console.log("passwordHash = " + passwordHash)
-
-        let walletInfo = {
-            "username": username,
-            "port": -1, //TODO: Dedicated port is no longer necessary
-            "password": passwordHash,
-            "address": uuidv4().replaceAll("-", ""),
-            "available balance": 0,
-            "pending balance": 0,
-            "total balance": 0,
-            "nodes": [],
-            "past_transactions": []
-        }
-
-        wallet.createWalletFile(username)
-
-    //     let sleepMs = 10000
-
-    //    console.log("(updateBalance) Sleeping for " + sleepMs + "ms...")
-    //    await sleep(sleepMs)
-    //    console.log("(updateBalance) Done sleeping")
-
-        let walletMap = new Map(Object.entries(walletInfo))
-
-        wallet.updateFileMultipleFields(walletMap, username)
-
-       
-        let response = {
-            "message": "Wallet " + walletInfo["username"] + " created",
-            "address": walletInfo["address"]
-        }
-
-        console.log(response["message"])
-        console.log("address: " + response["address"])
-
-        // console.log("typeof(passwordHash) = " + typeof(passwordHash))
-        
-
-        
-
-        // console.log("username = " + username)
-
-        // password = prompt("password: ")
-
-
-        
-    }
 
 
 
@@ -1126,104 +851,6 @@ function registerOffline(username = "", password = ""){
 
 
 
-
-async function loginOffline____(username = "", password = ""){
-    let walletStr = ""
-    let walletDict = ""
-    
-    console.log("password = " + password)
-
-    let passwordBitArray = hash.sha256.hash(password)
-    
-    console.log("passwordBitArray = " + passwordBitArray)
-
-    
-    let passwordHash = codec.hex.fromBits(passwordBitArray)
-
-    console.log("passwordHash = " + passwordHash)
-
-    fs.readFile(username + "_wallet.json", (err, inputD) => {
-        console.log("theUsername (loginOffline) = ")
-
-        if (err){
-
-            console.log("File reading error: it is possible that your username or password is incorrect")
-
-            throw err
-        }
-
-        console.log("inputD (loginOffline) " + " = " + inputD)
-
-
-        walletStr += inputD.toString()
-
-        console.log("inputD.toString() (loginOffline) = " + inputD.toString())
-
-        console.log("walletStr (loginOffline) = " + walletStr)
-
-        walletDict = JSON.parse(walletStr)
-
-        // return walletDict
-        if (passwordHash == walletDict["password"]){
-        wallet.username = username
-        wallet.port = walletDict["port"]
-        wallet.address = walletDict["address"]
-        wallet.available = walletDict["available balance"]
-        wallet.pending = walletDict["pending balance"]
-        wallet.total = walletDict["total balance"]
-        wallet.nodes = new Set(walletDict["nodes"])
-        wallet.pastTransactions = walletDict["past_transactions"]
-
-        wallet.updateBalance()
-
-        console.log("Login successful")
-        console.log("[" + wallet.username + "]" + "      details:")
-        
-        console.log("         available balance :" + walletDict["available balance"])
-        console.log("         pending balance :" + walletDict["pending balance"])
-        console.log("         total balance :" + walletDict["total balance"])
-
-        }
-        else{
-            console.log("---> File reading error: it is possible that your username or password is incorrect")
-
-        }   
-
-
-        
- 
-
-        console.log("(((walletStr = " + walletStr)
-
-        console.log("(((walletDict = " + walletDict)
-
-
-
-
-    }
-
-    
-)
-
-
-let sleepMs = 10000
-
-console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
-await sleep(sleepMs)
-console.log("(loginOffline) Done sleeping")
- 
-
-console.log("ppppppppppppppp  " + walletDict + "  ppppppppppppppp" )
-
-console.log("ooooooooooooooo  " + walletDict + "  ooooooooooooooo" )
-
-console.log("popoppo   " + wallet.username + "   popoppo")
-
-
-
-
-
-}
 
 async function loginOffline(username = "", password = ""){
     let walletStr = ""
