@@ -804,7 +804,7 @@ function registerOffline(username = "", password = ""){
                 "pending balance": 0,
                 "total balance": 0,
                 "nodes": [],
-                "past_transactions": []
+                "past_transactions": {}
             }
     
             wallet.createWalletFile(username)
@@ -939,7 +939,7 @@ async function loginOffline(username = "", password = ""){
                     console.log(`[wallet.total] = ${request2.result.data["total balance"]}`)
                     wallet.nodes = new Set(request2.result.data.nodes)
                     console.log(`[wallet.nodes] = ${new Set(request2.result.data.nodes)}`)
-                    wallet.pastTransactions = request2.result.data.past_transactions
+                    wallet.pastTransactions = new Map(Object.entries(request2.result.data.past_transactions))
                     console.log(`[wallet.pastTransactions] = ${request2.result.data.past_transactions}`)
 
                     wallet.updateBalance()

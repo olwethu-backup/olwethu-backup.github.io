@@ -3,74 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wallet UI</title>
+  <title>Blockchain Wallet</title>
   <style>
+    /* Basic styling for simplicity */
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      padding: 20px;
+      background-color: #f4f4f9;
     }
-    button {
-      margin: 10px 0;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
     }
     .balances {
-      margin: 20px 0;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: #f9f9f9;
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
     }
     .balances div {
-      margin-bottom: 5px;
+      text-align: center;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: #fff;
+    }
+    .btn-secondary:hover {
+      background-color: #565e64;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+    .modal-content input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .modal-content button {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Wallet Interface</h1>
+  <div class="container">
+    <h1>Blockchain Wallet</h1>
+    <div class="balances">
+      <div>
+        <h3>Available</h3>
+        <p id="available-balance">0</p>
+      </div>
+      <div>
+        <h3>Pending</h3>
+        <p id="pending-balance">0</p>
+      </div>
+      <div>
+        <h3>Total</h3>
+        <p id="total-balance">0</p>
+      </div>
+    </div>
+    <button class="btn-primary" id="send-button">Send</button>
+    <button class="btn-secondary" id="update-balance-button">Update Balance</button>
+    <button class="btn-secondary" id="register-node-button">Register Node</button>
+  </div>
 
-  
-<!--   
-  <script type="module">
-    import axios from 'https://cdn.skypack.dev/axios'
-  </script>
-
-
-  <script type="module">
-    import uuid from 'https://cdn.skypack.dev/uuid'
-    console.log("[uuid]")
-    console.log("typeof(uuid) = " + typeof(uuid))
-  </script> -->
-
-  <!-- <script type="module">
-    import { hash, codec } from "sjcl"
-    </script> -->
-              
-
-
-
-<!-- <script type="module">
-  // import axios from 'https://cdn.skypack.dev/axios';
-  // import uuid from 'https://cdn.skypack.dev/uuid';
-
-    // console.log("_____>uuid<_____")
-    // console.log("typeof(uuid) = " + typeof(uuid))
-//   import { hash, codec } from "sjcl"
-  // Import Wallet.js after dependencies are loaded
-  // import Wallet from './Wallet.js'
-
-  // console.log("Wallet = " + Wallet)
-  // console.log("typeof(Wallet) = " + typeof(Wallet))
-
-  // Example: Initialize wallet
-//   const wallet = new Wallet('username', 'password');
-//   console.log(wallet);
-</script> -->
-
-<!-- <script src="Wallet.js"></script> -->
-
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Modal for Sending -->
+  <div class="modal" id="send-modal">
+    <div class="modal-content">
+      <h2>Send Funds</h2>
+      <input type="text" id="recipient-address" placeholder="Recipient Address">
+      <input type="number" id="send-amount" placeholder="Amount">
+      <button class="btn-primary" id="send-confirm-button">Send</button>
+      <button class="btn-secondary" id="send-cancel-button">Cancel</button>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/uuid/dist/umd/uuidv4.min.js"></script>
 <!-- <script src="https://cdn.jsdelivr.net/npm/sjcl/sjcl.js"></script> -->
 
@@ -78,17 +127,83 @@
 
 <script src="Wallet.js"></script>
 
-  <div class="balances">
-    <h2>Balances</h2>
-    <div>Available: <span id="available-balance">0</span></div>
-    <div>Pending: <span id="pending-balance">0</span></div>
-    <div>Total: <span id="total-balance">0</span></div>
-  </div>
 
-  <button onclick="wallet.send('test_yyy', 0)">Send</button>
-  <button onclick="wallet.updateBalance()">Update Balance</button>
-  <button onclick="wallet.registerNode()">Register New Nodes</button>
+  <script type="module">
+    
 
-  
+    // const wallet = new Wallet(); // Initialize wallet instance
+
+    // Balances
+    const availableBalanceElem = document.getElementById('available-balance');
+    const pendingBalanceElem = document.getElementById('pending-balance');
+    const totalBalanceElem = document.getElementById('total-balance');
+
+    // Buttons and Modal
+    const sendButton = document.getElementById('send-button');
+    const updateBalanceButton = document.getElementById('update-balance-button');
+    const registerNodeButton = document.getElementById('register-node-button');
+    const sendModal = document.getElementById('send-modal');
+    const recipientAddressInput = document.getElementById('recipient-address');
+    const sendAmountInput = document.getElementById('send-amount');
+    const sendConfirmButton = document.getElementById('send-confirm-button');
+    const sendCancelButton = document.getElementById('send-cancel-button');
+
+    // Show Send Modal
+    sendButton.onclick = () => {
+      sendModal.style.display = 'flex';
+    };
+
+    // Close Send Modal
+    sendCancelButton.onclick = () => {
+      sendModal.style.display = 'none';
+    };
+
+    // Confirm Send
+    sendConfirmButton.onclick = async () => {
+      const recipient = recipientAddressInput.value;
+      const amount = parseFloat(sendAmountInput.value);
+
+      if (!recipient || isNaN(amount) || amount < 0) {
+        alert('Please enter a valid recipient address and amount.');
+        return;
+      }
+
+      // try {
+        await wallet.send(recipient, amount);
+        alert('Transaction sent successfully!');
+        sendModal.style.display = 'none';
+        recipientAddressInput.value = '';
+        sendAmountInput.value = '';
+      // } catch (error) {
+      //   alert('Failed to send transaction: ' + error.message);
+      // }
+    };
+
+    // Update Balance
+    updateBalanceButton.onclick = async () => {
+      try {
+        await wallet.updateBalance();
+        availableBalanceElem.textContent = wallet.available;
+        pendingBalanceElem.textContent = wallet.pending;
+        totalBalanceElem.textContent = wallet.total;
+        alert('Balances updated!');
+      } catch (error) {
+        alert('Failed to update balance: ' + error.message);
+      }
+    };
+
+    // Register Node
+    registerNodeButton.onclick = async () => {
+      const nodes = prompt('Enter node addresses (comma-separated):');
+      if (nodes) {
+        try {
+          await wallet.registerNode(nodes.split(','));
+          alert('Nodes registered successfully!');
+        } catch (error) {
+          alert('Failed to register nodes: ' + error.message);
+        }
+      }
+    };
+  </script>
 </body>
 </html>
