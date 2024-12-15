@@ -1112,8 +1112,8 @@ console.log("popoppo   " + wallet.username + "   popoppo")
 
 // registerOffline("endnotes", "password")
 
-loginOffline("endnotes", "password")
-console.log("__lolo_" + wallet.username + "__lolo_")
-wallet.registerNode(["127.0.0.1:5122","127.0.0.1:5138","127.0.0.1:5118","127.0.0.1:5126","127.0.0.1:5130","127.0.0.1:5146","127.0.0.1:5134"])
+loginOffline("kropotkin", "password")
+// console.log("__lolo_" + wallet.username + "__lolo_")
+// wallet.registerNode(["127.0.0.1:5122","127.0.0.1:5138","127.0.0.1:5118","127.0.0.1:5126","127.0.0.1:5130","127.0.0.1:5146","127.0.0.1:5134"])
 
 

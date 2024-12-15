@@ -394,7 +394,7 @@ class Wallet{
                 if (transaction['sender'] == transactionAddress){
 
                     if(this.pastTransactions.has(transaction["transaction_id"])){
-                        if (this.pastTransactions.get(transactions["transaction_id"])["status"] == "pending"){
+                        if (this.pastTransactions.get(transaction["transaction_id"])["status"] == "pending"){
                             this.pastTransactions.get(transaction["transaction_id"]) = "confirmed"
                         }
                         if (!transactionRecentlyConfirmed){
@@ -440,7 +440,7 @@ class Wallet{
 
 
         if (transactionRecentlyConfirmed){
-            saveTransactions()
+            this.saveTransactions()
         }
         
 

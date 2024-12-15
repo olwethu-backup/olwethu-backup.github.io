@@ -100,39 +100,6 @@
       margin-top: 10px;
     }
 
-    .node-list {
-      margin-top: 10px;
-      text-align: left;
-      max-height: 100px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      padding: 10px;
-      border-radius: 5px;
-    }
-
-    .node-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-    }
-
-    .node-item span {
-      flex-grow: 1;
-    }
-
-    .node-item button {
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      padding: 5px;
-      border-radius: 3px;
-      cursor: pointer;
-    }
-
-    .node-item button:hover {
-      background-color: #b02a37;
-    }
-
     .notification {
       position: fixed;
       bottom: 20px;
@@ -173,10 +140,8 @@
     </div>
     <button class="btn-primary" id="send-button">Send</button>
     <button class="btn-secondary" id="update-balance-button">Update Balance</button>
-    <button class="btn-secondary" id="register-node-button">Register Nodes</button>
+    <button class="btn-secondary" id="register-node-button">Register Node</button>
   </div>
-
-
 
   <!-- Modal for Sending -->
   <div class="modal" id="send-modal">
@@ -186,18 +151,6 @@
       <input type="number" id="send-amount" placeholder="Amount" min="0.01" step="0.01">
       <button class="btn-primary" id="send-confirm-button">Send</button>
       <button class="btn-secondary" id="send-cancel-button">Cancel</button>
-    </div>
-  </div>
-
-  <!-- Modal for Node Registration -->
-  <div class="modal" id="register-modal">
-    <div class="modal-content">
-      <h2>Register Nodes</h2>
-      <input type="text" id="node-address" placeholder="Node Address (e.g., 127.0.0.1:5000)">
-      <button class="btn-primary" id="add-node-button">Add Node</button>
-      <div class="node-list" id="node-list"></div>
-      <button class="btn-primary" id="register-confirm-button">Register All</button>
-      <button class="btn-secondary" id="register-cancel-button">Cancel</button>
     </div>
   </div>
 
@@ -211,7 +164,7 @@
   
   <script src="Wallet.js"></script>
   <script>
-
+    // const wallet = new Wallet();
 
     const availableBalanceElem = document.getElementById('available-balance');
     const pendingBalanceElem = document.getElementById('pending-balance');
@@ -225,18 +178,7 @@
     const sendAmountInput = document.getElementById('send-amount');
     const sendConfirmButton = document.getElementById('send-confirm-button');
     const sendCancelButton = document.getElementById('send-cancel-button');
-
-    
-    const registerButton = document.getElementById('register-node-button');
-    const registerModal = document.getElementById('register-modal');
-    const addNodeButton = document.getElementById('add-node-button');
-    const registerConfirmButton = document.getElementById('register-confirm-button');
-    const registerCancelButton = document.getElementById('register-cancel-button');
-    const nodeList = document.getElementById('node-list');
-    const nodeAddressInput = document.getElementById('node-address');
     const notificationElem = document.getElementById('notification');
-
-    let nodes = [];
 
     const showNotification = (message, type = 'success') => {
       notificationElem.textContent = message;
@@ -246,7 +188,6 @@
         notificationElem.style.display = 'none';
       }, 3000);
     };
-
 
     sendButton.onclick = () => {
       sendModal.style.display = 'flex';
@@ -288,49 +229,16 @@
       }
     };
 
-    registerButton.onclick = () => {
-      registerModal.style.display = 'flex';
-    };
-
-    registerCancelButton.onclick = () => {
-      registerModal.style.display = 'none';
-      nodes = [];
-      nodeList.innerHTML = '';
-      nodeAddressInput.value = '';
-    };
-
-    addNodeButton.onclick = () => {
-      const address = nodeAddressInput.value.trim();
-      if (address) {
-        nodes.push(address);
-        const nodeItem = document.createElement('div');
-        nodeItem.className = 'node-item';
-        nodeItem.innerHTML = `<span>${address}</span><button onclick="removeNode('${address}')">Remove</button>`;
-        nodeList.appendChild(nodeItem);
-        nodeAddressInput.value = '';
-      }
-    };
-
-    registerConfirmButton.onclick = async () => {
-      try {
-        await wallet.registerNode(nodes);
-        showNotification('Nodes registered successfully!');
-        registerModal.style.display = 'none';
-        nodes = [];
-        nodeList.innerHTML = '';
-      } catch (error) {
-        showNotification('Failed to register nodes: ' + error.message, 'error');
-      }
-    };
-
-    window.removeNode = (address) => {
-      nodes = nodes.filter(node => node !== address);
-      const nodeItems = document.querySelectorAll('.node-item');
-      nodeItems.forEach(item => {
-        if (item.querySelector('span').textContent === address) {
-          item.remove();
+    registerNodeButton.onclick = async () => {
+      const nodes = prompt('Enter node addresses (comma-separated):');
+      if (nodes) {
+        try {
+          await wallet.registerNode(nodes.split(',').map(node => node.trim()));
+          showNotification('Nodes registered successfully!');
+        } catch (error) {
+          showNotification('Failed to register nodes: ' + error.message, 'error');
         }
-      });
+      }
     };
   </script>
 </body>
