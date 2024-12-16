@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blockchain Wallet</title>
+  <style>
+    /* Basic styling */
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+
+    .balances {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .balances div {
+      text-align: center;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      background-color: #565e64;
+    }
+
+    .blockchain-viewer {
+      margin-top: 30px;
+    }
+
+    .block {
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .block-header {
+      font-weight: bold;
+      color: #555;
+    }
+
+    .block-data {
+      margin: 5px 0;
+      color: #333;
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .notification.error {
+      background-color: #dc3545;
+    }
+
+    .notification.success {
+      background-color: #28a745;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Blockchain Wallet</h1>
+    <div class="balances">
+      <div>
+        <h3>Available</h3>
+        <p id="available-balance">0</p>
+      </div>
+      <div>
+        <h3>Pending</h3>
+        <p id="pending-balance">0</p>
+      </div>
+      <div>
+        <h3>Total</h3>
+        <p id="total-balance">0</p>
+      </div>
+    </div>
+    <button class="btn-primary" id="send-button">Send</button>
+    <button class="btn-secondary" id="update-balance-button">Update Balance</button>
+    <button class="btn-secondary" id="register-node-button">Register Nodes</button>
+
+    <!-- Blockchain Viewer -->
+    <div class="blockchain-viewer">
+      <h2>Blockchain</h2>
+      <div id="blockchain-container">
+        <p>No blocks yet. Update balance to load the blockchain.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification"></div>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uuid/dist/umd/uuidv4.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/sjcl/sjcl.js"></script> -->
+  
+  <script src="https://cdn.jsdelivr.net/npm/sjcl@1.0.8/sjcl.min.js"></script>
+  
+
+  <script src="Wallet.js"></script>
+  <script>
+    
+
+    const availableBalanceElem = document.getElementById('available-balance');
+    const pendingBalanceElem = document.getElementById('pending-balance');
+    const totalBalanceElem = document.getElementById('total-balance');
+    const blockchainContainer = document.getElementById('blockchain-container');
+    const notificationElem = document.getElementById('notification');
+
+    const showNotification = (message, type = 'success') => {
+      notificationElem.textContent = message;
+      notificationElem.className = `notification ${type}`;
+      notificationElem.style.display = 'block';
+      setTimeout(() => {
+        notificationElem.style.display = 'none';
+      }, 3000);
+    };
+
+    const renderBlockchain = (blockchain) => {
+      blockchainContainer.innerHTML = '';
+      if (blockchain.length === 0) {
+        blockchainContainer.innerHTML = '<p>No blocks in the blockchain.</p>';
+        return;
+      }
+      blockchain.forEach(block => {
+        const blockElem = document.createElement('div');
+        blockElem.className = 'block';
+        blockElem.innerHTML = `
+          <div class="block-header">Block ${block.index}</div>
+          <div class="block-data"><strong>Timestamp:</strong> ${new Date(block.timestamp * 1000).toLocaleString()}</div>
+          <div class="block-data"><strong>Previous Hash:</strong> ${block.previous_hash}</div>
+          <div class="block-data"><strong>Transactions:</strong> ${block.transactions.length} transaction(s)</div>
+        `;
+        blockchainContainer.appendChild(blockElem);
+      });
+    };
+
+    document.getElementById('update-balance-button').onclick = async () => {
+      try {
+        await wallet.updateBalance();
+        availableBalanceElem.textContent = wallet.available.toFixed(2);
+        pendingBalanceElem.textContent = wallet.pending.toFixed(2);
+        totalBalanceElem.textContent = wallet.total.toFixed(2);
+
+        // Fetch blockchain data
+        const blockchain = await wallet.getBlockchain(); // Ensure your Wallet class has a `getBlockchain()` method.
+        renderBlockchain(blockchain);
+
+        showNotification('Balances and blockchain updated!');
+      } catch (error) {
+        showNotification('Failed to update balances or blockchain: ' + error.message, 'error');
+      }
+    };
+  </script>
+</body>
+</html>

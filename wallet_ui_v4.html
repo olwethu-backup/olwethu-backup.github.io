@@ -14,7 +14,7 @@
     }
 
     .container {
-      max-width: 800px;
+      max-width: 600px;
       margin: 0 auto;
       padding: 20px;
       background: #fff;
@@ -63,10 +63,6 @@
 
     .btn-secondary:hover {
       background-color: #565e64;
-    }
-
-    .blockchain-viewer {
-      margin-top: 30px;
     }
 
     .modal {
@@ -137,56 +133,6 @@
       background-color: #b02a37;
     }
 
-
-    .blockchain-viewer {
-      margin-top: 30px;
-    }
-
-    .blockchain-container {
-      max-height: 300px;
-      overflow-y: scroll;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      padding: 10px;
-      background: #f9f9f9;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .block {
-      border: 1px solid #ddd;
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 5px;
-      background-color: #fff;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
-
-    .block-header {
-      font-weight: bold;
-      color: #555;
-      cursor: pointer;
-    }
-
-    .block-data {
-      margin: 5px 0;
-      color: #333;
-    }
-
-    .transactions {
-      margin-top: 10px;
-      padding-left: 10px;
-      display: none;
-    }
-
-    .transaction {
-      margin: 5px 0;
-      padding: 5px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background-color: #f9f9f9;
-    }
-
-
     .notification {
       position: fixed;
       bottom: 20px;
@@ -228,10 +174,11 @@
     <button class="btn-primary" id="send-button">Send</button>
     <button class="btn-secondary" id="update-balance-button">Update Balance</button>
     <button class="btn-secondary" id="register-node-button">Register Nodes</button>
+  </div>
 
 
 
-     <!-- Modal for Sending -->
+  <!-- Modal for Sending -->
   <div class="modal" id="send-modal">
     <div class="modal-content">
       <h2>Send Funds</h2>
@@ -254,17 +201,6 @@
     </div>
   </div>
 
-
-
-    <!-- Blockchain Viewer -->
-    <div class="blockchain-viewer">
-      <h2>Blockchain</h2>
-      <div id="blockchain-container" class="blockchain-container">
-        <p>No blocks yet. Update balance to load the blockchain.</p>
-      </div>
-    </div>
-  </div>
-
   <!-- Notification -->
   <div class="notification" id="notification"></div>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -273,16 +209,13 @@
   
   <script src="https://cdn.jsdelivr.net/npm/sjcl@1.0.8/sjcl.min.js"></script>
   
-
   <script src="Wallet.js"></script>
-
   <script>
-  
+
+
     const availableBalanceElem = document.getElementById('available-balance');
     const pendingBalanceElem = document.getElementById('pending-balance');
     const totalBalanceElem = document.getElementById('total-balance');
-    const blockchainContainer = document.getElementById('blockchain-container');
-    const notificationElem = document.getElementById('notification');
 
     const sendButton = document.getElementById('send-button');
     const updateBalanceButton = document.getElementById('update-balance-button');
@@ -301,6 +234,7 @@
     const registerCancelButton = document.getElementById('register-cancel-button');
     const nodeList = document.getElementById('node-list');
     const nodeAddressInput = document.getElementById('node-address');
+    const notificationElem = document.getElementById('notification');
 
     let nodes = [];
 
@@ -312,7 +246,6 @@
         notificationElem.style.display = 'none';
       }, 3000);
     };
-
 
 
     sendButton.onclick = () => {
@@ -398,60 +331,6 @@
           item.remove();
         }
       });
-    };
-
-
-    const renderBlockchain = (blockchain) => {
-      blockchainContainer.innerHTML = '';
-      if (blockchain.length === 0) {
-        blockchainContainer.innerHTML = '<p>No blocks in the blockchain.</p>';
-        return;
-      }
-      blockchain.forEach((block, blockIndex) => {
-        const blockElem = document.createElement('div');
-        blockElem.className = 'block';
-
-        // Block data
-        blockElem.innerHTML = `
-          <div class="block-header" onclick="toggleTransactions(${blockIndex})">Block ${block.index}</div>
-          <div class="block-data"><strong>Timestamp:</strong> ${new Date(block.timestamp * 1000).toLocaleString()}</div>
-          <div class="block-data"><strong>Previous Hash:</strong> ${block.previous_hash}</div>
-          <div class="block-data"><strong>Transactions:</strong> ${block.transactions.length} transaction(s)</div>
-          <div class="transactions" id="transactions-${blockIndex}">
-            ${block.transactions.map(tx => `
-              <div class="transaction">
-                <p><strong>Sender:</strong> ${tx.sender}</p>
-                <p><strong>Recipient:</strong> ${tx.recipient}</p>
-                <p><strong>Amount:</strong> ${tx.amount}</p>
-              </div>
-            `).join('')}
-          </div>
-        `;
-
-        blockchainContainer.appendChild(blockElem);
-      });
-    };
-
-    const toggleTransactions = (blockIndex) => {
-      const transactionElem = document.getElementById(`transactions-${blockIndex}`);
-      transactionElem.style.display = transactionElem.style.display === 'block' ? 'none' : 'block';
-    };
-
-    document.getElementById('update-balance-button').onclick = async () => {
-      try {
-        await wallet.updateBalance();
-        availableBalanceElem.textContent = wallet.available.toFixed(2);
-        pendingBalanceElem.textContent = wallet.pending.toFixed(2);
-        totalBalanceElem.textContent = wallet.total.toFixed(2);
-
-        // Fetch blockchain data
-        const blockchain = await wallet.getBlockchain(); // Ensure Wallet.js has a `getBlockchain()` method.
-        renderBlockchain(blockchain);
-
-        showNotification('Balances and blockchain updated!');
-      } catch (error) {
-        showNotification('Failed to update balances or blockchain: ' + error.message, 'error');
-      }
     };
   </script>
 </body>

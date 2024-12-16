@@ -452,7 +452,83 @@ class Wallet{
 
     }
 
+    async getBlockchain(){
 
+        console.log("(getBlockchain) this.nodes=" + this.nodes)
+        console.log("(getBlockchain) this.nodes.size=" + this.nodes.size)
+        console.log(" (getBlockchain) this.nodes.values()=" + this.nodes.values())        
+        
+        if (this.nodes.size == 0){
+            console.log("(getBlockchain) this.nodes.size == 0")
+            console.log("(getBlockchain) No available nodes to get blockchain data from. Register some nodes to be able to update your balance.")    
+            return
+        }
+
+        if (this.nodes.size < 0){
+            console.log("(getBlockchain) this.nodes.size < 0 (HOW?!?!??!)")
+            return
+        }
+
+        
+
+
+        
+
+        let urls = []
+
+        let nodesIterator = this.nodes.values()
+
+        let node = ""
+        
+        for (let n = 0; n < this.nodes.size; n++){
+
+            node = nodesIterator.next().value
+
+            // console.log("node=" + node)
+
+            urls.push(axios.get("http://" + node + "/chain"))
+
+            
+        }
+
+       let theResponses = await axios.all(urls).then(axios.spread((...responses) =>{
+
+
+
+            
+            return responses
+
+
+       })).catch(errors => {
+        console.error(errors)
+       })
+
+    
+       console.log("theResponses = " + theResponses)
+       let response = theResponses[0] //TODO: modify this to seek the longest chain that was provided
+
+       console.log("response = " + response)
+       console.log("status=" + response["status"])
+       console.log("status type: " + typeof(response["status"]))
+
+       let sleepMs = 10000
+
+       console.log("(getBlockchain) Sleeping for " + sleepMs + "ms...")
+       await sleep(sleepMs)
+       console.log("(getBlockchain) Done sleeping")
+
+
+       if (response["status"] == 200){
+            let length = response["data"]["length"]
+            let chain = response["data"]["chain"]
+
+            console.log("chain (getBlockchain) =")
+            console.log(chain)
+            return chain
+       }
+
+
+    }
 
     async updateBalance(){
         console.log("this.nodes=" + this.nodes)
@@ -610,6 +686,8 @@ class Wallet{
         console.log(theResponse)
         
     }
+
+
 
     async asyncRequest(endpoint, parameters){
 
