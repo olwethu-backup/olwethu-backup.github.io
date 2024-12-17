@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet Login/Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+  
+    body.dark-mode {
+      background-color: #121212;
+      color: #eee;
+    }
+  
+    .container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+  
+    body.dark-mode .container {
+      background: #1e1e1e;
+      box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+    }
+  
+    h1 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+  
+    body.dark-mode h1 {
+      color: #4da3ff;
+    }
+  
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #fff;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+  
+    body.dark-mode input[type="text"], body.dark-mode input[type="password"] {
+      background-color: #2a2a2a;
+      color: #eee;
+      border-color: #444;
+    }
+  
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+  
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+    }
+  
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+  
+    .btn-secondary {
+      background-color: #6c757d;
+      color: #fff;
+    }
+  
+    .btn-secondary:hover {
+      background-color: #565e64;
+    }
+  
+    body.dark-mode .btn-primary {
+      background-color: #4da3ff;
+    }
+  
+    body.dark-mode .btn-primary:hover {
+      background-color: #2872b8;
+    }
+  
+    body.dark-mode .btn-secondary {
+      background-color: #444;
+    }
+  
+    body.dark-mode .btn-secondary:hover {
+      background-color: #555;
+    }
+  
+    .error-message {
+      color: #dc3545;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  
+    body.dark-mode .error-message {
+      color: #f76c6c;
+    }
+  
+    .dark-mode-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+  
+    body.dark-mode .dark-mode-toggle {
+      background-color: #444;
+    }
+  </style>
+  
+</head>
+<body>
+  <div class="container">
+    <h1>Wallet Login/Register</h1>
+    <form id="wallet-form">
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="button" class="btn-primary" id="login-button">Login</button>
+      <button type="button" class="btn-secondary" id="register-button">Register</button>
+    </form>
+    <div class="error-message" id="error-message"></div>
+  </div>
+
+
+  <div class="notification" id="notification"></div>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uuid/dist/umd/uuidv4.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/sjcl/sjcl.js"></script> -->
+  
+  <script src="https://cdn.jsdelivr.net/npm/sjcl@1.0.8/sjcl.min.js"></script>
+  
+
+
+
+  <script src="Wallet.js"></script>
+  <script>
+    
+    const loginButton = document.getElementById('login-button');
+    const registerButton = document.getElementById('register-button');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const errorMessage = document.getElementById('error-message');
+
+    const redirectToWalletUI = () => {
+      window.location.href = "wallet_ui.html";
+    };
+
+    const handleLogin = async () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!username || !password) {
+        errorMessage.textContent = "Please enter both username and password.";
+        return;
+      }
+
+      try {
+        await loginOffline(username, password);
+
+        // Store login information in localStorage
+        localStorage.setItem("username", username);
+        localStorage.setItem("password", password);
+
+        redirectToWalletUI();
+      } catch (error) {
+        errorMessage.textContent = "Invalid username or password.";
+        console.error(error);
+      }
+    };
+
+    const handleRegister = async () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!username || !password) {
+        errorMessage.textContent = "Please enter both username and password.";
+        return;
+      }
+
+      try {
+        registerOffline(username, password);
+
+        // Store registration information in localStorage
+        localStorage.setItem("username", username);
+        localStorage.setItem("password", password);
+
+        redirectToWalletUI();
+      } catch (error) {
+        errorMessage.textContent = "Registration failed. Username might already exist.";
+        console.error(error);
+      }
+    };
+
+    loginButton.onclick = handleLogin;
+    registerButton.onclick = handleRegister;
+  </script>
+
+<script>
+    // Apply dark mode if enabled in localStorage
+    const applyDarkMode = () => {
+      const isDarkMode = localStorage.getItem("darkMode") === "true";
+      document.body.classList.toggle("dark-mode", isDarkMode);
+    };
+  
+    // Toggle dark mode and save preference to localStorage
+    const toggleDarkMode = () => {
+      const isDarkMode = document.body.classList.toggle("dark-mode");
+      localStorage.setItem("darkMode", isDarkMode);
+    };
+  
+    // Apply dark mode on page load
+    window.onload = applyDarkMode;
+  </script>
+
+  
+  
+</body>
+</html>

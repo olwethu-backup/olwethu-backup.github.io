@@ -13,6 +13,11 @@
       color: #333;
     }
 
+    body.dark-mode {
+      background-color: #121212;
+      color: #eee;
+    }
+
     .container {
       max-width: 800px;
       margin: 0 auto;
@@ -22,9 +27,18 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
+    body.dark-mode .container {
+      background: #1e1e1e;
+      box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+    }
+
     h1 {
       text-align: center;
       color: #007bff;
+    }
+
+    body.dark-mode h1 {
+      color: #4da3ff;
     }
 
     .balances {
@@ -65,9 +79,22 @@
       background-color: #565e64;
     }
 
-    .blockchain-viewer {
-      margin-top: 30px;
+    body.dark-mode .btn-primary {
+      background-color: #4da3ff;
     }
+
+    body.dark-mode .btn-primary:hover {
+      background-color: #2872b8;
+    }
+
+    body.dark-mode .btn-secondary {
+      background-color: #444;
+    }
+
+    body.dark-mode .btn-secondary:hover {
+      background-color: #555;
+    }
+
 
     .modal {
       display: none;
@@ -138,6 +165,33 @@
     }
 
 
+    body.dark-mode .modal-content {
+    background: #1e1e1e;
+    color: #eee;
+    border: 1px solid #444;
+  }
+
+  body.dark-mode .modal-content input {
+    background-color: #2a2a2a;
+    color: #fff;
+    border: 1px solid #444;
+  }
+
+  body.dark-mode .node-list {
+    background-color: #2a2a2a;
+    color: #fff;
+    border: 1px solid #444;
+  }
+
+  body.dark-mode .node-item button {
+    background-color: #c0392b;
+    color: #fff;
+  }
+
+  body.dark-mode .node-item button:hover {
+    background-color: #a93226;
+  }
+
     .blockchain-viewer {
       margin-top: 30px;
     }
@@ -149,7 +203,11 @@
       border-radius: 5px;
       padding: 10px;
       background: #f9f9f9;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark-mode .blockchain-container {
+      background: #232323;
+      border-color: #444;
     }
 
     .block {
@@ -159,6 +217,12 @@
       border-radius: 5px;
       background-color: #fff;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      word-wrap: break-word; /* Prevent long addresses from spilling over */
+    }
+
+    body.dark-mode .block {
+      background-color: #2a2a2a;
+      border-color: #444;
     }
 
     .block-header {
@@ -167,9 +231,8 @@
       cursor: pointer;
     }
 
-    .block-data {
-      margin: 5px 0;
-      color: #333;
+    body.dark-mode .block-header {
+      color: #bbb;
     }
 
     .transactions {
@@ -186,25 +249,24 @@
       background-color: #f9f9f9;
     }
 
+    body.dark-mode .transaction {
+      background-color: #2a2a2a;
+      border-color: #444;
+    }
 
-    .notification {
+    .dark-mode-toggle {
       position: fixed;
-      bottom: 20px;
+      top: 20px;
       right: 20px;
-      padding: 15px;
+      padding: 10px;
       background-color: #007bff;
       color: white;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      display: none;
+      cursor: pointer;
     }
 
-    .notification.error {
-      background-color: #dc3545;
-    }
-
-    .notification.success {
-      background-color: #28a745;
+    body.dark-mode .dark-mode-toggle {
+      background-color: #444;
     }
   </style>
 </head>
@@ -301,6 +363,40 @@
     const registerCancelButton = document.getElementById('register-cancel-button');
     const nodeList = document.getElementById('node-list');
     const nodeAddressInput = document.getElementById('node-address');
+
+
+    const initializeWallet = async () => {
+
+    const isDarkMode = localStorage.getItem("darkMode") === "true";
+    document.body.classList.toggle("dark-mode", isDarkMode);
+
+
+    const username = localStorage.getItem("username");
+    const password = localStorage.getItem("password");
+
+
+    console.log("username = " + username)
+    console.log("password = " + password)
+
+    if (username && password) {
+      try {
+        await loginOffline(username, password);
+        document.getElementById('available-balance').textContent = wallet.available.toFixed(2);
+        document.getElementById('pending-balance').textContent = wallet.pending.toFixed(2);
+        document.getElementById('total-balance').textContent = wallet.total.toFixed(2);
+        console.log(`Wallet initialized for user: ${username}`);
+      } catch (error) {
+        console.error("Error initializing wallet:", error);
+      }
+    } else {
+      console.error("No login data found in localStorage.");
+      window.location.href = "login_register.html"; // Redirect back to login page if no login data
+    }
+  };
+
+  // Initialize the wallet on page load
+  window.onload = initializeWallet;
+
 
     let nodes = [];
 
@@ -454,5 +550,25 @@
       }
     };
   </script>
+
+<script>
+  // Apply dark mode if enabled in localStorage
+  const applyDarkMode = () => {
+    const isDarkMode = localStorage.getItem("darkMode") === "true";
+    document.body.classList.toggle("dark-mode", isDarkMode);
+  };
+
+  // Toggle dark mode and save preference to localStorage
+  const toggleDarkMode = () => {
+    const isDarkMode = document.body.classList.toggle("dark-mode");
+    localStorage.setItem("darkMode", isDarkMode);
+  };
+
+  // // Apply dark mode on page load
+  // window.onload = applyDarkMode;
+</script>
+
+
+
 </body>
 </html>

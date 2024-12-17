@@ -826,7 +826,10 @@ class Wallet{
 }
 
 
+
+
 let wallet = new Wallet()
+
 
 
 
@@ -1065,7 +1068,12 @@ console.log("popoppo   " + wallet.username + "   popoppo")
 
 
 
-
+// if (window.locationhref == "wallet_ui.html"){
+//     console.log("================================")
+//     console.log("window.href = " + window.href)
+//     console.log("================================")
+//     loginOffline(username, password)
+// }
 
 
 
@@ -1075,16 +1083,16 @@ console.log("popoppo   " + wallet.username + "   popoppo")
 
 // +
 
-wallet.username = "graeber"
+// wallet.username = "graeber"
 
-// // wallet.saveTransactions()
+// // // wallet.saveTransactions()
 
 
-// let testChain = [{"index": 1, "timestamp": 1730480510.3574343, "transactions": [], "proof": 100, "previous_hash": 1}, {"index": 2, "timestamp": 1730480629.2533815, "transactions": [{"sender": "f2f6155aeb5343a594ed23b26f95fae6", "recipient": "test_x", "amount": "0.0", "transaction_id": "8ae9fc367855461c992bbb2758f6f6b4"}, {"sender": "0", "recipient": "8c01184582174ce19b01aa31e26c6a1f", "amount": 1, "transaction_id": "29d8ba27ac1e492685e5597c9bea350f"}], "proof": 888273, "previous_hash": "6e90578eded256a98e8e1112132be099045371d936b37428d504bb5554c60d68"}]
-wallet.address = "8c01184582174ce19b01aa31e26c6a1f"
+// // let testChain = [{"index": 1, "timestamp": 1730480510.3574343, "transactions": [], "proof": 100, "previous_hash": 1}, {"index": 2, "timestamp": 1730480629.2533815, "transactions": [{"sender": "f2f6155aeb5343a594ed23b26f95fae6", "recipient": "test_x", "amount": "0.0", "transaction_id": "8ae9fc367855461c992bbb2758f6f6b4"}, {"sender": "0", "recipient": "8c01184582174ce19b01aa31e26c6a1f", "amount": 1, "transaction_id": "29d8ba27ac1e492685e5597c9bea350f"}], "proof": 888273, "previous_hash": "6e90578eded256a98e8e1112132be099045371d936b37428d504bb5554c60d68"}]
+// wallet.address = "8c01184582174ce19b01aa31e26c6a1f"
 
-// wallet.address = "861ab4092eb64d5ebbbad64302319c99"
-wallet.nodes = new Set(["127.0.0.1:5122", "127.0.0.1:5138", "127.0.0.1:5142", "127.0.0.1:5126", "127.0.0.1:5130", "127.0.0.1:5146", "127.0.0.1:5134"])
+// // wallet.address = "861ab4092eb64d5ebbbad64302319c99"
+// wallet.nodes = new Set(["127.0.0.1:5122", "127.0.0.1:5138", "127.0.0.1:5142", "127.0.0.1:5126", "127.0.0.1:5130", "127.0.0.1:5146", "127.0.0.1:5134"])
 
 // +
 

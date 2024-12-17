@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet Login/Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      background-color: #565e64;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Wallet Login/Register</h1>
+    <form id="wallet-form">
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="button" class="btn-primary" id="login-button">Login</button>
+      <button type="button" class="btn-secondary" id="register-button">Register</button>
+    </form>
+    <div class="error-message" id="error-message"></div>
+  </div>
+  <div class="notification" id="notification"></div>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uuid/dist/umd/uuidv4.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/sjcl/sjcl.js"></script> -->
+  
+  <script src="https://cdn.jsdelivr.net/npm/sjcl@1.0.8/sjcl.min.js"></script>
+  
+  <script src="Wallet.js"></script>
+  
+  
+  <script>
+    
+    const loginButton = document.getElementById('login-button');
+    const registerButton = document.getElementById('register-button');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const errorMessage = document.getElementById('error-message');
+
+
+    let username = ""
+    let password = ""
+    
+    // let wallet = new Wallet()
+
+    const redirectToWalletUI = async (theUsername, thePassword, mode) => {
+
+
+      window.location.href = "wallet_ui.html";
+      console.log("-------<><>< wallet_ui.html")
+
+
+
+
+
+      if (mode == "register"){
+        console.log("-------<><>< register")
+        await registerOffline(theUsername, thePassword);
+        
+
+      }
+      else if (mode == "login"){
+        console.log("-------<><>< login")
+        await loginOffline(theUsername, thePassword);
+      }
+
+    };
+
+    const handleLogin = async () => {
+      username = usernameInput.value.trim();
+      password = passwordInput.value.trim();
+
+      if (!username || !password) {
+        errorMessage.textContent = "Please enter both username and password.";
+        return;
+      }
+
+      try {
+        await loginOffline(username, password);
+        redirectToWalletUI(username, password, "login");
+      } catch (error) {
+        errorMessage.textContent = "Invalid username or password.";
+        console.error(error);
+      }
+    };
+
+    const handleRegister = async () => {
+      username = usernameInput.value.trim();
+      password = passwordInput.value.trim();
+
+      if (!username || !password) {
+        errorMessage.textContent = "Please enter both username and password.";
+        return;
+      }
+
+      try {
+        registerOffline(username, password);
+        redirectToWalletUI(username, password, "register");
+      } catch (error) {
+        errorMessage.textContent = "Registration failed. Username might already exist.";
+        console.error(error);
+      }
+    };
+
+    loginButton.onclick = handleLogin;
+    registerButton.onclick = handleRegister;
+  </script>
+</body>
+</html>
