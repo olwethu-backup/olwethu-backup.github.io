@@ -380,7 +380,7 @@
 
     if (username && password) {
       try {
-        await loginOffline(username, password);
+        await loginOffline(username, password, true);
         document.getElementById('available-balance').textContent = wallet.available.toFixed(2);
         document.getElementById('pending-balance').textContent = wallet.pending.toFixed(2);
         document.getElementById('total-balance').textContent = wallet.total.toFixed(2);
@@ -516,6 +516,7 @@
           <div class="transactions" id="transactions-${blockIndex}">
             ${block.transactions.map(tx => `
               <div class="transaction">
+                <p><strong>Transaction ID:</strong> ${tx.transaction_id}</p>
                 <p><strong>Sender:</strong> ${tx.sender}</p>
                 <p><strong>Recipient:</strong> ${tx.recipient}</p>
                 <p><strong>Amount:</strong> ${tx.amount}</p>

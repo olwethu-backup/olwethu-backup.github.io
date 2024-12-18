@@ -184,11 +184,30 @@
       }
 
       try {
-        await loginOffline(username, password);
+        // await loginOffline(username, password);
+
+        let passwordHash = password //in the event where the password was already encrypted by the login page
+        
+      
+        let db = event.target.result
+
+        console.log("db (login_register.html) = " + db)
+
+        console.log("password (login_register.html) = " + password)
+
+        let passwordBitArray = sjcl.hash.sha256.hash(password)
+        
+        console.log("passwordBitArray (login_register.html) = " + passwordBitArray)
+    
+        
+        passwordHash = sjcl.codec.hex.fromBits(passwordBitArray)
+        console.log("passwordHash (login_register.html) = " + passwordHash)
+
+
 
         // Store login information in localStorage
         localStorage.setItem("username", username);
-        localStorage.setItem("password", password);
+        localStorage.setItem("password", passwordHash);
 
         redirectToWalletUI();
       } catch (error) {

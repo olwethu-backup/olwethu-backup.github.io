@@ -66,6 +66,7 @@ class BlockChain:
 
         self.num_proofs = 0
         
+        self.ip_address = ""
 
         #code for consensus with other nodes
         self.nodes = set()
@@ -672,8 +673,9 @@ def register_account_offline():
     print(f"============REGISTER============")
     print("\n\n")   
 
-    username = input("username: ")
-    password = sha256(input("password: ").encode()).hexdigest() #encrypted password
+    username = input("Username: ")
+    password = sha256(input("Password: ").encode()).hexdigest() #encrypted password
+    ip_address = input("IP Address: ")
 
     node_info = {
         "username":username,
@@ -726,7 +728,7 @@ def register_account_offline():
     # node_dict = json.load(open(f"{username}_node.json", "r"))
 
 
-    node_dict = {"address":node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"], "nodes":node_info["nodes"]}
+    node_dict = {"address":node_info["address"], "password":node_info["password"], "connected wallets": node_info["connected wallets"], "port": port_data, "chain": node_info["chain"], "nodes":node_info["nodes"], "ip_address": ip_address}
     node_json = json.dumps(node_dict)
 
     node_file = open(f"{username}_node.json", "w")
@@ -1312,7 +1314,11 @@ def login_offline(username = "", password = ""):
     blockchain.nodes = node_dict["nodes"]
     blockchain.username = username
     blockchain.port = node_dict["port"]
-    
+    try:
+        blockchain.ip_address = node_dict["ip_address"]
+    except KeyError:
+        pass
+
     # p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : blockchain.port + 1, "subprocess" : True})
     # p1.start()
 
@@ -1384,7 +1390,7 @@ def login_offline(username = "", password = ""):
 
     print("--------------12")
 
-    return blockchain.port
+    return [blockchain.ip_address, blockchain.port]
 
 
 
@@ -1396,25 +1402,34 @@ def main(username = "", password = "", mode = ""):
     # subprocess.check_call("python blockchain_wallet.py", shell = True)
     
         
-    port = login_offline(username, password) #int(input("Blockchain Node - Select port (5000/5001): "))
+    ip_address, port = login_offline(username, password) #int(input("Blockchain Node - Select port (5000/5001): "))
 
     if mode == "clear":
         blockchain.clear_chain()
         print(f"{blockchain.port} node's chain has been cleared")
         print("--------------------------------------------------")
         return
-    
-    if port != -1:
-        # p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : port + 1, "subprocess" : True})
+    if ip_address == "":
+        if port != -1:
+            # p1 = Process(target = blockchain_wallet.main, kwargs = {"port" : port + 1, "subprocess" : True})
 
-        # blockchain.wallet_address = "http://localhost:" + str(port + 1) #all transactions to and from this node will use this wallet port
+            # blockchain.wallet_address = "http://localhost:" + str(port + 1) #all transactions to and from this node will use this wallet port
 
-        # p1.start()
-        app.run(host="0.0.0.0", port=port)
+            # p1.start()
+            app.run(host="0.0.0.0", port=port)
 
-        # p2 = Process(target = app.run, kwargs = {"host":"0.0.0.0", "port": int(input("Blockchain Node - Select port (5000/5001): "))})
+            # p2 = Process(target = app.run, kwargs = {"host":"0.0.0.0", "port": int(input("Blockchain Node - Select port (5000/5001): "))})
+    else:
+        ip_address_without_port = ip_address[:ip_address.index(":")]
+        port = int(ip_address[ip_address.index(":") + 1:])
+
+        print(f"{ip_address_without_port=}")
+        print(f"{port=}")       
         
-    
+        app.run(host=ip_address_without_port, port=port)
+
+
+
 
 if __name__ == '__main__':
     main()

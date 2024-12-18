@@ -933,7 +933,7 @@ function registerOffline(username = "", password = ""){
 
 
 
-async function loginOffline(username = "", password = ""){
+async function loginOffline(username = "", password = "", encrypted = false){
     let walletStr = ""
     let walletDict = ""
     
@@ -951,6 +951,7 @@ async function loginOffline(username = "", password = ""){
 
         console.log("event.target.result = " + event.target.result)
         
+        let passwordHash = password //in the event where the password was already encrypted by the login page
         
         let db = event.target.result
 
@@ -958,14 +959,23 @@ async function loginOffline(username = "", password = ""){
 
         console.log("password = " + password)
 
+
+        if (!encrypted){
+        
+
         let passwordBitArray = sjcl.hash.sha256.hash(password)
         
         console.log("passwordBitArray = " + passwordBitArray)
     
         
-        let passwordHash = sjcl.codec.hex.fromBits(passwordBitArray)
-    
+        passwordHash = sjcl.codec.hex.fromBits(passwordBitArray)
         console.log("passwordHash = " + passwordHash)
+
+
+    }else{
+        console.log("passwordHash (encrypted = true) = " + passwordHash)
+    }
+        
 
 
 
@@ -1024,6 +1034,8 @@ async function loginOffline(username = "", password = ""){
                     console.log(`[wallet.pastTransactions] = ${request2.result.data.past_transactions}`)
 
                     wallet.updateBalance()
+
+                    
 
                     console.log("Login successful")
                     console.log("[" + wallet.username + "]" + "      details:")
