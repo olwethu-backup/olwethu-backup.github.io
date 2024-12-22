@@ -126,7 +126,7 @@ class Wallet:
         print(f"{self.nodes=}")
         
 
-        rs = [grequests.get(url = "http://" + i + "/propagate", params = values_dict) for i in self.nodes]
+        rs = [grequests.get(url = "https://" + i + "/propagate", params = values_dict, timeout = 20) for i in self.nodes]
     
 
         node_responses = grequests.map(rs)
@@ -306,7 +306,7 @@ class Wallet:
 
             try:
 
-                rs = [grequests.get(f"http://{node}/chain")]
+                rs = [grequests.get(f"https://{node}/chain", timeout = 20)]
                 responses = grequests.map(rs)
 
                 response = responses[0] #TODO: selects first chain in responses, it should instead select the longest chain

@@ -8,7 +8,7 @@ import json
 import hashlib
 from uuid import uuid4
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from urllib.parse import urlparse
 
@@ -118,7 +118,7 @@ class BlockChain:
         
         print(f"{self.nodes=}")
 
-        urls = [f"http://{node[:node.index(":")] + ":" + str(int(node[node.index(":") + 1:]) + listener_port_offset)}" for node in self.nodes]
+        urls = [f"http://{node[:node.index("t")] + "t" + str(int(node[node.index("t") + 1:node.index("t") + 5]) + listener_port_offset)}" for node in self.nodes]
 
         # print(f"\n\n\n\n\n{urls=}\n\n\n\n\n")
         
@@ -569,7 +569,9 @@ class BlockChain:
         guess = f'{last_proof}{proof}'.encode()
         guess_hash_digest  = hashlib.sha256(guess).hexdigest()
 
-        difficulty = 5
+        # difficulty = 5
+
+        difficulty = 3
 
         return guess_hash_digest[:difficulty] == difficulty*"0"
         
@@ -656,8 +658,20 @@ class BlockChain:
 
 #Instantiating a node with a blockchain API endpoint
 
+# app = Flask(__name__)
+# CORS(app,    resources={r"/*": {"origins": "*"}})
+
+
+
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 # Generate a globally unique address for this node
 
@@ -1395,7 +1409,9 @@ def login_offline(username = "", password = ""):
 
 
 
-    
+def open_tunnel(the_port):
+    subprocess.run(["lt", "--port", f"{the_port}", "--subdomain", f"mywallet{the_port}"], shell = True)
+
 
 def main(username = "", password = "", mode = ""):
     # blockchain_wallet.main()
@@ -1416,7 +1432,14 @@ def main(username = "", password = "", mode = ""):
             # blockchain.wallet_address = "http://localhost:" + str(port + 1) #all transactions to and from this node will use this wallet port
 
             # p1.start()
+            
+            open_tunnel_thread = threading.Thread(target = open_tunnel, args = (port, ))
+            open_tunnel_thread.daemon = True
+            open_tunnel_thread.start()
+            # subprocess.run(["lt", "--port", f"{port}", "--subdomain", f"mywallet{port}"], shell = True)
+
             app.run(host="0.0.0.0", port=port)
+            
 
             # p2 = Process(target = app.run, kwargs = {"host":"0.0.0.0", "port": int(input("Blockchain Node - Select port (5000/5001): "))})
     else:
@@ -1426,8 +1449,17 @@ def main(username = "", password = "", mode = ""):
         print(f"{ip_address_without_port=}")
         print(f"{port=}")       
         
-        app.run(host=ip_address_without_port, port=port)
+        # subprocess.run(["lt", "--port", f"{port}", "--subdomain", f"mywallet{port}"], shell = True)
+        
+        open_tunnel_thread = threading.Thread(target = open_tunnel, args = (port, ))
+        open_tunnel_thread.daemon = True
+        open_tunnel_thread.start()
 
+
+        sleep(5)
+
+        app.run(host=ip_address_without_port, port=port)
+        
 
 
 

@@ -486,7 +486,32 @@ class Wallet{
 
             // console.log("node=" + node)
 
-            urls.push(axios.get("http://" + node + "/chain"))
+            urls.push(axios.get("https://" + node + "/chain").catch(function(error){
+                console.log(node + " is unavailable~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                
+                if (error.response) {
+                    // The request was made and the server responded with a status code
+                    // that falls out of the range of 2xx
+                    // console.log(error.response.data);
+                    // console.log(error.response.status);
+                    // console.log(error.response.headers);
+
+                    console.log("(getBlockchain) ~~~~~~~~~~~")
+
+                  } else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    // console.log(error.request);
+
+                    console.log("(getBlockchain) &&&&&&&&&&&")
+                  } else {
+                    // Something happened in setting up the request that triggered an Error
+                    // console.log('Error', error.message);
+                    console.log("(getBlockchain) %%%%%%%%%%%")
+                    
+                  }
+            }))
 
             
         }
@@ -563,7 +588,33 @@ class Wallet{
 
             // console.log("node=" + node)
 
-            urls.push(axios.get("http://" + node + "/chain"))
+            urls.push(axios.get("https://" + node + "/chain").catch(function(error){
+                console.log(node + " is unavailable~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                
+                if (error.response) {
+                    // The request was made and the server responded with a status code
+                    // that falls out of the range of 2xx
+                    // console.log(error.response.data);
+                    // console.log(error.response.status);
+                    // console.log(error.response.headers);
+
+                    console.log("~~~~~~~~~~~")
+
+                  } else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    // console.log(error.request);
+
+                    console.log("&&&&&&&&&&&")
+                  } else {
+                    // Something happened in setting up the request that triggered an Error
+                    // console.log('Error', error.message);
+                    console.log("%%%%%%%%%%%")
+                    
+                  }
+            })
+            )
 
             
         }
@@ -585,7 +636,11 @@ class Wallet{
 
 
        })).catch(errors => {
+        console.log("*************************")
+        console.log("---------------------------------------")
         console.error(errors)
+        console.log("---------------------------------------")
+        console.log("*************************")
        })
 
     //    console.log("theResponses=" + theResponses)
@@ -707,7 +762,7 @@ class Wallet{
             node = nodesIterator.next().value
             console.log("NODE = " + node)
             console.log("))))))))))))))))))))))))))))))))))))))))))))))")
-            urls.push(axios.get("http://" + node + endpoint, {params: parameters}))
+            urls.push(axios.get("https://" + node + endpoint, {params: parameters}))
         }
 
         console.log("-2-")
@@ -775,7 +830,7 @@ class Wallet{
 
         for (let i = 0; i < this.nodes.size; i++){
             node = nodesIterator.next().value
-            urls.push(axios.get("http://" + node + "/propagate", {params: {
+            urls.push(axios.get("https://" + node + "/propagate", {params: {
                 "recipient": address,
                 "amount": amount
             }}))
@@ -999,7 +1054,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
 
             request2.onerror = (event) => {
                   // Handle errors
-                    console.error("ERROR IN REQUEST2 in loginOffline()")
+                    console.error("ERROR IN REQUEST2 in loginOffline()") 
                 };
                 request2.onsuccess = (event) => {
                   // Do something with the request.result!
