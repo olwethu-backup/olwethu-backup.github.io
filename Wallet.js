@@ -1056,6 +1056,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
                   // Handle errors
                     console.error("ERROR IN REQUEST2 in loginOffline()") 
                 };
+                
                 request2.onsuccess = (event) => {
                   // Do something with the request.result!
     

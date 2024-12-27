@@ -1411,7 +1411,9 @@ def login_offline(username = "", password = ""):
 
 def open_tunnel(the_port):
     subprocess.run(["lt", "--port", f"{the_port}", "--subdomain", f"mywallet{the_port}"], shell = True)
-
+    
+def open_tunnel2(the_port):
+    subprocess.run(["cloudflared", "tunnel", "--url", f"http://localhost:{the_port}"])
 
 def main(username = "", password = "", mode = ""):
     # blockchain_wallet.main()
@@ -1433,9 +1435,16 @@ def main(username = "", password = "", mode = ""):
 
             # p1.start()
             
+
+            # open_tunnel2_thread = threading.Thread(target = open_tunnel2, args = (port, ))
+            # open_tunnel2_thread.daemon = True
+            # open_tunnel2_thread.start()
+
             open_tunnel_thread = threading.Thread(target = open_tunnel, args = (port, ))
             open_tunnel_thread.daemon = True
             open_tunnel_thread.start()
+
+            
             # subprocess.run(["lt", "--port", f"{port}", "--subdomain", f"mywallet{port}"], shell = True)
 
             app.run(host="0.0.0.0", port=port)
