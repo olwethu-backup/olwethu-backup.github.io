@@ -479,6 +479,8 @@ class Wallet{
         let nodesIterator = this.nodes.values()
 
         let node = ""
+
+        let protocol = "https"
         
         for (let n = 0; n < this.nodes.size; n++){
 
@@ -486,7 +488,11 @@ class Wallet{
 
             // console.log("node=" + node)
 
-            urls.push(axios.get("https://" + node + "/chain").catch(function(error){
+            if (node[0] == "1"){
+                protocol = "http"
+            }
+
+            urls.push(axios.get(protocol + "://" + node + "/chain").catch(function(error){
                 console.log(node + " is unavailable~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 
                 if (error.response) {
@@ -581,6 +587,8 @@ class Wallet{
         let nodesIterator = this.nodes.values()
 
         let node = ""
+
+        let protocol = "https"
         
         for (let n = 0; n < this.nodes.size; n++){
 
@@ -588,7 +596,11 @@ class Wallet{
 
             // console.log("node=" + node)
 
-            urls.push(axios.get("https://" + node + "/chain").catch(function(error){
+            if (node[0] == "1"){
+                protocol = "http"
+            }
+
+            urls.push(axios.get(protocol + "://" + node + "/chain").catch(function(error){
                 console.log(node + " is unavailable~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 
                 if (error.response) {
@@ -754,15 +766,22 @@ class Wallet{
 
         let node = ""
 
+        let protocol = "https"
         
 
         for (let i = 0; i < this.nodes.size; i++){
 
            
             node = nodesIterator.next().value
+
+            
+            if (node[0] == "1"){
+                protocol = "http"
+            }
+
             console.log("NODE = " + node)
             console.log("))))))))))))))))))))))))))))))))))))))))))))))")
-            urls.push(axios.get("https://" + node + endpoint, {params: parameters}))
+            urls.push(axios.get(protocol + "://" + node + endpoint, {params: parameters}))
         }
 
         console.log("-2-")
@@ -827,10 +846,17 @@ class Wallet{
         let address = "test"
         let amount = 0
 
+        let protocol = "https"
 
         for (let i = 0; i < this.nodes.size; i++){
             node = nodesIterator.next().value
-            urls.push(axios.get("https://" + node + "/propagate", {params: {
+
+            
+            if (node[0] == "1"){
+                protocol = "http"
+            }
+
+            urls.push(axios.get(protocol + "://" + node + "/propagate", {params: {
                 "recipient": address,
                 "amount": amount
             }}))

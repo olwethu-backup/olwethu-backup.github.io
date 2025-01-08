@@ -5,8 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wallet Login/Register</title>
   <style>
+
+    @font-face {
+      font-family: Neospace;
+      src: url("neospace/Neospace-Expanded.ttf");
+    }
+
+
+    @font-face {
+      font-family: Consolas;
+      src: url("Consolas.ttf");
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: Consolas, Arial, sans-serif;
       padding: 20px;
       background-color: #f4f4f9;
       color: #333;
@@ -19,8 +31,8 @@
     }
   
     body.dark-mode {
-      background-color: #121212;
-      color: #eee;
+      background-color: #000000;
+      color: #ffffff;
     }
   
     .container {
@@ -34,13 +46,14 @@
     }
   
     body.dark-mode .container {
-      background: #1e1e1e;
-      box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+      background: #000000;
+      border: thin solid white;
     }
   
     h1 {
+      font-family: Neospace, Arial, sans-serif;
       text-align: center;
-      color: #007bff;
+      color: #4da3ff;
       margin-bottom: 20px;
     }
   
@@ -49,23 +62,25 @@
     }
   
     input[type="text"], input[type="password"] {
-      width: 100%;
+      font-family: Consolas, sans-serif;
+      width: 95%;
       padding: 10px;
       margin: 10px 0;
       border: 1px solid #ddd;
       border-radius: 5px;
-      background-color: #fff;
+      background-color: #000000;
       color: #333;
       transition: background-color 0.3s, color 0.3s, border-color 0.3s;
     }
   
     body.dark-mode input[type="text"], body.dark-mode input[type="password"] {
-      background-color: #2a2a2a;
+      background-color: #000000;
       color: #eee;
-      border-color: #444;
+      border-color: #ffffff;
     }
   
     button {
+      font-family: Consolas, Arial, sans-serif;
       width: 100%;
       padding: 10px;
       margin: 10px 0;
@@ -77,37 +92,50 @@
     }
   
     .btn-primary {
-      background-color: #007bff;
-      color: #fff;
+
+      background-color: #000000;
+      border: thin solid #4da3ff;
+      color: #4da3ff;
     }
   
     .btn-primary:hover {
-      background-color: #0056b3;
+      background-color: #4da3ff;
+      color: #000000;
+
     }
   
     .btn-secondary {
-      background-color: #6c757d;
-      color: #fff;
+      background-color: #000000;
+      color: #ffffff;
+      border: thin solid #ffffff;
     }
   
     .btn-secondary:hover {
-      background-color: #565e64;
+      background-color: #ffffff;
+      color: #000000;
     }
   
     body.dark-mode .btn-primary {
-      background-color: #4da3ff;
+      background-color: #000000;
+      border: thin solid #4da3ff;
+      color: #4da3ff;
     }
   
     body.dark-mode .btn-primary:hover {
-      background-color: #2872b8;
+      background-color: #4da3ff;
+      color: #000000;
+
     }
   
     body.dark-mode .btn-secondary {
-      background-color: #444;
+      background-color: #000000;
+      color: #ffffff;
+      border: thin solid #ffffff;
     }
   
     body.dark-mode .btn-secondary:hover {
-      background-color: #555;
+      background-color: #ffffff;
+      color: #000000;
     }
   
     .error-message {
@@ -125,7 +153,7 @@
       top: 20px;
       right: 20px;
       padding: 10px;
-      background-color: #007bff;
+      background-color: #4da3ff;
       color: white;
       border-radius: 8px;
       cursor: pointer;
@@ -140,7 +168,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Wallet Login/Register</h1>
+    <h1>Login</h1>
     <form id="wallet-form">
       <input type="text" id="username" placeholder="Username" required>
       <input type="password" id="password" placeholder="Password" required>

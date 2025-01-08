@@ -3,19 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blockchain Wallet</title>
+  <title>Wallet</title>
   <style>
     /* Basic styling */
+
+    @font-face {
+      font-family: Neospace;
+      src: url("neospace/Neospace-Expanded.ttf");
+    }
+
+    @font-face {
+      font-family: Consolas;
+      src: url("Consolas.ttf");
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: Consolas, sans-serif;
       padding: 20px;
       background-color: #f4f4f9;
       color: #333;
     }
 
     body.dark-mode {
-      background-color: #121212;
-      color: #eee;
+      background-color: #000000;
+      color: #ffffff;
     }
 
     .container {
@@ -28,11 +39,13 @@
     }
 
     body.dark-mode .container {
-      background: #1e1e1e;
-      box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+      background: #000000;
+      /* box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1); */
+      border: thin solid white;
     }
 
     h1 {
+      font-family: Neospace, sans-serif;
       text-align: center;
       color: #007bff;
     }
@@ -52,6 +65,7 @@
     }
 
     button {
+      font-family: Consolas, sans-serif;
       width: 100%;
       padding: 10px;
       margin: 10px 0;
@@ -62,12 +76,13 @@
     }
 
     .btn-primary {
-      background-color: #007bff;
+      background-color: #000000;
       color: #fff;
+      border: thin solid white;
     }
 
     .btn-primary:hover {
-      background-color: #0056b3;
+      background-color: #4da3ff;
     }
 
     .btn-secondary {
@@ -80,19 +95,24 @@
     }
 
     body.dark-mode .btn-primary {
-      background-color: #4da3ff;
+      background-color: #000000;
+      color: #4da3ff;
+      border: thin solid #4da3ff;
     }
 
     body.dark-mode .btn-primary:hover {
-      background-color: #2872b8;
+      background-color: #4da3ff;
+      color: #000000;
     }
 
     body.dark-mode .btn-secondary {
-      background-color: #444;
+      border: thin solid white;
+      background-color: #000000;
     }
 
     body.dark-mode .btn-secondary:hover {
-      background-color: #555;
+      background-color: #ffffff;
+      color: #000000;
     }
 
 
@@ -119,6 +139,7 @@
     }
 
     .modal-content input {
+      font-family: Consolas, sans-serif;
       width: 100%;
       padding: 10px;
       margin: 10px 0;
@@ -159,28 +180,31 @@
       border-radius: 3px;
       cursor: pointer;
     }
-
+    #address {
+      font-family: Consolas;
+    }
     .node-item button:hover {
       background-color: #b02a37;
     }
 
 
     body.dark-mode .modal-content {
-    background: #1e1e1e;
+    background: #000000;
     color: #eee;
-    border: 1px solid #444;
+    border: 1px solid #ffffff;
   }
 
   body.dark-mode .modal-content input {
-    background-color: #2a2a2a;
+    font-family: Consolas, sans-serif;
+    background-color: #000000;
     color: #fff;
-    border: 1px solid #444;
+    border: 1px solid #ffffff;
   }
 
   body.dark-mode .node-list {
-    background-color: #2a2a2a;
+    background-color: #000000;
     color: #fff;
-    border: 1px solid #444;
+    border: 1px solid #ffffff;
   }
 
   body.dark-mode .node-item button {
@@ -199,19 +223,19 @@
     .blockchain-container {
       max-height: 300px;
       overflow-y: scroll;
-      border: 1px solid #ddd;
+      border: 1px solid #ffffff;
       border-radius: 5px;
       padding: 10px;
       background: #f9f9f9;
     }
 
     body.dark-mode .blockchain-container {
-      background: #232323;
-      border-color: #444;
+      background: #000000;
+      border-color: #000000;
     }
 
     .block {
-      border: 1px solid #ddd;
+      border: 1px solid #ffffff;
       margin-bottom: 10px;
       padding: 10px;
       border-radius: 5px;
@@ -221,18 +245,18 @@
     }
 
     body.dark-mode .block {
-      background-color: #2a2a2a;
-      border-color: #444;
+      background-color: #000000;
+      border-color: #ffffff;
     }
 
     .block-header {
       font-weight: bold;
-      color: #555;
+      color: #ffffff;
       cursor: pointer;
     }
 
     body.dark-mode .block-header {
-      color: #bbb;
+      color: #ffffff;
     }
 
     .transactions {
@@ -250,8 +274,8 @@
     }
 
     body.dark-mode .transaction {
-      background-color: #2a2a2a;
-      border-color: #444;
+      background-color: #000000;
+      border-color: #ffffff;
     }
 
     .dark-mode-toggle {
@@ -266,13 +290,17 @@
     }
 
     body.dark-mode .dark-mode-toggle {
-      background-color: #444;
+      background-color: #000000;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Blockchain Wallet</h1>
+    <h1>Wallet</h1>
+    <div class="address_container">
+      <h3>Address</h3>
+      <p id="address"></p>
+    </div>
     <div class="balances">
       <div>
         <h3>Available</h3>
@@ -339,7 +367,8 @@
   <script src="Wallet.js"></script>
 
   <script>
-  
+    
+    const addressElem = document.getElementById("address");
     const availableBalanceElem = document.getElementById('available-balance');
     const pendingBalanceElem = document.getElementById('pending-balance');
     const totalBalanceElem = document.getElementById('total-balance');
@@ -381,6 +410,7 @@
     if (username && password) {
       try {
         await loginOffline(username, password, true);
+        document.getElementById('address').textContent = wallet.address;
         document.getElementById('available-balance').textContent = wallet.available.toFixed(2);
         document.getElementById('pending-balance').textContent = wallet.pending.toFixed(2);
         document.getElementById('total-balance').textContent = wallet.total.toFixed(2);
@@ -447,7 +477,8 @@
         totalBalanceElem.textContent = wallet.total.toFixed(2);
         showNotification('Balances updated!');
       } catch (error) {
-        showNotification('Failed to update balances: ' + error.message, 'error');
+        // showNotification('Failed to update balances: ' + error.message, 'error');
+        showNotification("Failed to update balances or blockchain. Make sure to add nodes that are on the blockchain network so that you can update your balance and make transactions.");
       }
     };
 
@@ -547,7 +578,8 @@
 
         showNotification('Balances and blockchain updated!');
       } catch (error) {
-        showNotification('Failed to update balances or blockchain: ' + error.message, 'error');
+        // showNotification('Failed to update balances or blockchain: ' + error.message, 'error');
+        showNotification("Failed to update balances or blockchain. Make sure to add nodes that are on the blockchain network so that you can update your balance and make transactions.");
       }
     };
   </script>
