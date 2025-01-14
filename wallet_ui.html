@@ -396,7 +396,7 @@
 
     const initializeWallet = async () => {
 
-    const isDarkMode = localStorage.getItem("darkMode") === "true";
+    const isDarkMode = true;//localStorage.getItem("darkMode") === "true";
     document.body.classList.toggle("dark-mode", isDarkMode);
 
 
@@ -587,13 +587,13 @@
 <script>
   // Apply dark mode if enabled in localStorage
   const applyDarkMode = () => {
-    const isDarkMode = localStorage.getItem("darkMode") === "true";
+    const isDarkMode = true;//localStorage.getItem("darkMode") === "true";
     document.body.classList.toggle("dark-mode", isDarkMode);
   };
 
   // Toggle dark mode and save preference to localStorage
   const toggleDarkMode = () => {
-    const isDarkMode = document.body.classList.toggle("dark-mode");
+    const isDarkMode = true; //document.body.classList.toggle("dark-mode");
     localStorage.setItem("darkMode", isDarkMode);
   };
 
