@@ -262,7 +262,8 @@
         localStorage.setItem("password", password);
         console.log("SLEEP (5000ms)");
         // await sleep(5000);
-        redirectToWalletUI();
+        // redirectToWalletUI();
+        errorMessage.textContent = 'Successfully registered. You can now log in.';
       } catch (error) {
         errorMessage.textContent = "Registration failed. Username might already exist.";
         console.error(error);
