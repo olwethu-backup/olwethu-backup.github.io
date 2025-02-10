@@ -464,12 +464,14 @@
         return;
       }
 
+      sendModal.style.display = 'none';
+
       showNotification("Please wait...");
 
       try {
         await wallet.send(recipient, amount);
         showNotification('Transaction sent successfully!');
-        sendModal.style.display = 'none';
+        // sendModal.style.display = 'none';
         recipientAddressInput.value = '';
         sendAmountInput.value = '';
       } catch (error) {
