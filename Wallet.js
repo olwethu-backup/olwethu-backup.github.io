@@ -395,7 +395,7 @@ class Wallet{
 
                     if(this.pastTransactions.has(transaction["transaction_id"])){
                         if (this.pastTransactions.get(transaction["transaction_id"])["status"] == "pending"){
-                            this.pastTransactions.get(transaction["transaction_id"]) = "confirmed"
+                            this.pastTransactions.get(transaction["transaction_id"]).set("status", "confirmed")
                         }
                         if (!transactionRecentlyConfirmed){
                             transactionRecentlyConfirmed = true
@@ -413,7 +413,7 @@ class Wallet{
                 if (transaction["recipient"] == transactionAddress){
                     if (this.pastTransactions.has(transaction["transaction_id"])){
                         if (this.pastTransactions.get(transaction["transaction_id"])["status"] == "pending"){
-                            this.pastTransactions.get(transaction["transaction_id"])["status"] = "confirmed"
+                            this.pastTransactions.get(transaction["transaction_id"]).set("status", "confirmed")
                         }
 
                         if (!transactionRecentlyConfirmed){

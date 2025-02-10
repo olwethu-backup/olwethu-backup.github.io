@@ -236,7 +236,8 @@
         // Store login information in localStorage
         localStorage.setItem("username", username);
         localStorage.setItem("password", passwordHash);
-
+        console.log("SLEEP (5000ms)");
+        // await sleep(5000);
         redirectToWalletUI();
       } catch (error) {
         errorMessage.textContent = "Invalid username or password.";
@@ -259,7 +260,8 @@
         // Store registration information in localStorage
         localStorage.setItem("username", username);
         localStorage.setItem("password", password);
-
+        console.log("SLEEP (5000ms)");
+        // await sleep(5000);
         redirectToWalletUI();
       } catch (error) {
         errorMessage.textContent = "Registration failed. Username might already exist.";

@@ -402,7 +402,12 @@
 
     const username = localStorage.getItem("username");
     const password = localStorage.getItem("password");
-
+    console.log(localStorage)
+    
+    // console.log("sleeping for 10000ms");
+    // await sleep(10000);
+    // console.log(localStorage)
+    // await sleep(5000);
 
     console.log("username = " + username)
     console.log("password = " + password)
@@ -420,7 +425,7 @@
       }
     } else {
       console.error("No login data found in localStorage.");
-      window.location.href = "login_register.html"; // Redirect back to login page if no login data
+      window.location.href = "index.html"; // Redirect back to login page if no login data
     }
   };
 

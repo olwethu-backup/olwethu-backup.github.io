@@ -126,7 +126,7 @@ class Wallet:
         print(f"{self.nodes=}")
         
 
-        rs = [grequests.get(url = "https://" + i + "/propagate", params = values_dict, timeout = 20) for i in self.nodes]
+        rs = [grequests.get(url = "http://" + i + "/propagate", params = values_dict, timeout = 20) for i in self.nodes]
     
 
         node_responses = grequests.map(rs)
@@ -249,7 +249,7 @@ class Wallet:
     def register_node(self):
         #registers a node that will propagate a transaction from a wallet to the rest of the network
         
-        values = request.get_json()
+        # values = request.get_json()
 
         
 
@@ -263,6 +263,7 @@ class Wallet:
 
             if node == "done":
                 done_entering_nodes = True
+                break
 
             nodes.append(node)
 
@@ -289,8 +290,10 @@ class Wallet:
 
         response = {"message": f"nodes successfully registered",
                     "nodes": nodes}
+        
+        print(response["message"])
 
-        return jsonify(response), 201
+        # return jsonify(response), 201
 
                 
 
@@ -306,7 +309,7 @@ class Wallet:
 
             try:
 
-                rs = [grequests.get(f"https://{node}/chain", timeout = 20)]
+                rs = [grequests.get(f"http://{node}/chain", timeout = 20)]
                 responses = grequests.map(rs)
 
                 response = responses[0] #TODO: selects first chain in responses, it should instead select the longest chain

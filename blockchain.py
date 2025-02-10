@@ -1407,7 +1407,7 @@ def login_offline(username = "", password = ""):
     return [blockchain.ip_address, blockchain.port]
 
 
-
+#/home/olwethusigwela/.virtualenvs/myvirtualenv/
 
 def open_tunnel(the_port):
     subprocess.run(["lt", "--port", f"{the_port}", "--subdomain", f"mywallet{the_port}"], shell = True)
@@ -1440,9 +1440,9 @@ def main(username = "", password = "", mode = ""):
             # open_tunnel2_thread.daemon = True
             # open_tunnel2_thread.start()
 
-            open_tunnel_thread = threading.Thread(target = open_tunnel, args = (port, ))
-            open_tunnel_thread.daemon = True
-            open_tunnel_thread.start()
+            # open_tunnel_thread = threading.Thread(target = open_tunnel, args = (port, ))
+            # open_tunnel_thread.daemon = True
+            # open_tunnel_thread.start()
 
             
             # subprocess.run(["lt", "--port", f"{port}", "--subdomain", f"mywallet{port}"], shell = True)
