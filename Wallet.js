@@ -265,7 +265,7 @@ class Wallet{
         console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
         await sleep(sleepMs)
         console.log("(loginOffline) Done sleeping")
-        this.nodes = nodes
+        this.nodes = new Set(nodes);
         this.updateFile("nodes", nodes)
 
         console.log("nodes successfully registered")
