@@ -448,6 +448,7 @@
 
     sendButton.onclick = () => {
       sendModal.style.display = 'flex';
+      
     };
 
     sendCancelButton.onclick = () => {
@@ -462,6 +463,8 @@
         showNotification('Invalid recipient or amount.', 'error');
         return;
       }
+
+      showNotification("Please wait...");
 
       try {
         await wallet.send(recipient, amount);
@@ -511,6 +514,9 @@
     };
 
     registerConfirmButton.onclick = async () => {
+
+      showNotification("Please wait...");
+
       try {
         await wallet.registerNode(nodes);
         showNotification('Nodes registered successfully!');
@@ -571,6 +577,7 @@
     };
 
     document.getElementById('update-balance-button').onclick = async () => {
+      showNotification("Please wait...");
       try {
         await wallet.updateBalance();
         availableBalanceElem.textContent = wallet.available.toFixed(2);
