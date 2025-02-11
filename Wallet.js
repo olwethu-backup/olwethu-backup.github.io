@@ -522,42 +522,46 @@ class Wallet{
             
         }
 
-       let theResponses = await axios.all(urls).then(axios.spread((...responses) =>{
+       let theChain = await axios.all(urls).then(axios.spread((...responses) =>{
 
+
+                console.log("responses = " + responses)
+                let response = responses[0] //TODO: modify this to seek the longest chain that was provided
+        
+                console.log("response = " + response)
+                console.log("status=" + response["status"])
+                console.log("status type: " + typeof(response["status"]))
+        
+                // let sleepMs = 1500
+        
+                // console.log("(getBlockchain) Sleeping for " + sleepMs + "ms...")
+                // await sleep(sleepMs)
+                // console.log("(getBlockchain) Done sleeping")
+        
+        
+                if (response["status"] == 200){
+                    let length = response["data"]["length"]
+                    let chain = response["data"]["chain"]
+        
+                    console.log("chain (getBlockchain) =")
+                    console.log(chain)
+                    return chain
+                }
+ 
 
 
             
-            return responses
+            // return responses
 
 
        })).catch(errors => {
         console.error(errors)
        })
 
+       return theChain
+
     
-       console.log("theResponses = " + theResponses)
-       let response = theResponses[0] //TODO: modify this to seek the longest chain that was provided
-
-       console.log("response = " + response)
-       console.log("status=" + response["status"])
-       console.log("status type: " + typeof(response["status"]))
-
-       let sleepMs = 1500
-
-       console.log("(getBlockchain) Sleeping for " + sleepMs + "ms...")
-       await sleep(sleepMs)
-       console.log("(getBlockchain) Done sleeping")
-
-
-       if (response["status"] == 200){
-            let length = response["data"]["length"]
-            let chain = response["data"]["chain"]
-
-            console.log("chain (getBlockchain) =")
-            console.log(chain)
-            return chain
-       }
-
+   
 
     }
 
