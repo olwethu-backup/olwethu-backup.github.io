@@ -279,7 +279,7 @@ class Wallet{
 
 
         // console.log("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[")
-        this.updateBalance()
+        await this.updateBalance()
         // console.log("[](send)\n[](send)\n[](send)\n[](send)\n[](send)\n[](send)\n[](send)\n[](send)\n[](send)\n[](send)\n[](send)\n[](send)\n")
 
         // console.log("this.available=" + this.available)
@@ -1016,7 +1016,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
 
     console.log("000000" + dbName + "000000")
 
-    const request = indexedDB.open(dbName, 1)
+    const request = await indexedDB.open(dbName, 1)
 
 
 
@@ -1133,18 +1133,18 @@ async function loginOffline(username = "", password = "", encrypted = false){
         
 
 
-let sleepMs = 1500
+// let sleepMs = 1500
 
-console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
-await sleep(sleepMs)
-console.log("(loginOffline) Done sleeping")
+// console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
+// await sleep(sleepMs)
+// console.log("(loginOffline) Done sleeping")
  
 
-console.log("ppppppppppppppp  " + walletDict + "  ppppppppppppppp" )
+// console.log("ppppppppppppppp  " + walletDict + "  ppppppppppppppp" )
 
-console.log("ooooooooooooooo  " + walletDict + "  ooooooooooooooo" )
+// console.log("ooooooooooooooo  " + walletDict + "  ooooooooooooooo" )
 
-console.log("popoppo   " + wallet.username + "   popoppo")
+// console.log("popoppo   " + wallet.username + "   popoppo")
 
 
 
