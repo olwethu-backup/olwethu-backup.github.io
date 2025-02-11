@@ -1016,9 +1016,11 @@ async function loginOffline(username = "", password = "", encrypted = false){
 
     console.log("000000" + dbName + "000000")
 
+    var correct = false
+
     const request = await indexedDB.open(dbName, 1)
 
-    var correct = false
+   
 
     request.onsuccess = (event) => {
 
