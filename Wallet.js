@@ -1016,11 +1016,9 @@ async function loginOffline(username = "", password = "", encrypted = false){
 
     console.log("000000" + dbName + "000000")
 
-    var correct = false
+    const request = indexedDB.open(dbName, 1)
 
-    const request = await indexedDB.open(dbName, 1)
 
-   
 
     request.onsuccess = (event) => {
 
@@ -1048,7 +1046,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
 
 
     }else{
-        console.log("passwordHash (encrypted == true) = " + passwordHash)
+        console.log("passwordHash (encrypted = true) = " + passwordHash)
     }
         
 
@@ -1090,27 +1088,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
                 }
 
                 else{
-
-                    correct = true
-                    
-
-
-                }
-
-
-                };
-    
-        
-        }
-
-        request.onerror = (event) => {
-            console.error("request (loginOffline) ERROR!!")
-        }
-    
-        console.log(`correct = ${correct}`)
-
-    if(correct){
-        console.log("username and password are correct")
+                    console.log("username and password are correct")
 
                     wallet.username = username
                     console.log(`[wallet.username] = ${username}`)
@@ -1129,7 +1107,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
                     wallet.pastTransactions = new Map(Object.entries(request2.result.data.past_transactions))
                     console.log(`[wallet.pastTransactions] = ${request2.result.data.past_transactions}`)
 
-                    await wallet.updateBalance()
+                    wallet.updateBalance()
 
                     
 
@@ -1139,21 +1117,34 @@ async function loginOffline(username = "", password = "", encrypted = false){
                     console.log("         available balance :" + wallet.available)
                     console.log("         pending balance :" + wallet.pending)
                     console.log("         total balance :" + wallet.total)
-    }
 
 
-// let sleepMs = 1500
+                }
 
-// console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
-// await sleep(sleepMs)
-// console.log("(loginOffline) Done sleeping")
+
+                };
+    
+        
+        }
+
+        request.onerror = (event) => {
+            console.error("request (loginOffline) ERROR!!")
+        }
+        
+
+
+let sleepMs = 5000
+
+console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
+await sleep(sleepMs)
+console.log("(loginOffline) Done sleeping")
  
 
-// console.log("ppppppppppppppp  " + walletDict + "  ppppppppppppppp" )
+console.log("ppppppppppppppp  " + walletDict + "  ppppppppppppppp" )
 
-// console.log("ooooooooooooooo  " + walletDict + "  ooooooooooooooo" )
+console.log("ooooooooooooooo  " + walletDict + "  ooooooooooooooo" )
 
-// console.log("popoppo   " + wallet.username + "   popoppo")
+console.log("popoppo   " + wallet.username + "   popoppo")
 
 
 
