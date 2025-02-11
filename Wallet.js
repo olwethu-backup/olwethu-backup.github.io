@@ -1016,9 +1016,9 @@ async function loginOffline(username = "", password = "", encrypted = false){
 
     console.log("000000" + dbName + "000000")
 
-    const request = await indexedDB.open(dbName, 1)
+    const request = indexedDB.open(dbName, 1)
 
-
+    var correct = false
 
     request.onsuccess = (event) => {
 
@@ -1046,7 +1046,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
 
 
     }else{
-        console.log("passwordHash (encrypted = true) = " + passwordHash)
+        console.log("passwordHash (encrypted == true) = " + passwordHash)
     }
         
 
@@ -1088,7 +1088,26 @@ async function loginOffline(username = "", password = "", encrypted = false){
                 }
 
                 else{
-                    console.log("username and password are correct")
+
+                    correct = true
+                    
+
+
+                }
+
+
+                };
+    
+        
+        }
+
+        request.onerror = (event) => {
+            console.error("request (loginOffline) ERROR!!")
+        }
+
+
+    if(correct){
+        console.log("username and password are correct")
 
                     wallet.username = username
                     console.log(`[wallet.username] = ${username}`)
@@ -1107,7 +1126,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
                     wallet.pastTransactions = new Map(Object.entries(request2.result.data.past_transactions))
                     console.log(`[wallet.pastTransactions] = ${request2.result.data.past_transactions}`)
 
-                    wallet.updateBalance()
+                    await wallet.updateBalance()
 
                     
 
@@ -1117,20 +1136,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
                     console.log("         available balance :" + wallet.available)
                     console.log("         pending balance :" + wallet.pending)
                     console.log("         total balance :" + wallet.total)
-
-
-                }
-
-
-                };
-    
-        
-        }
-
-        request.onerror = (event) => {
-            console.error("request (loginOffline) ERROR!!")
-        }
-        
+    }
 
 
 // let sleepMs = 1500
