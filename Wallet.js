@@ -542,7 +542,7 @@ class Wallet{
        console.log("status=" + response["status"])
        console.log("status type: " + typeof(response["status"]))
 
-       let sleepMs = 3000
+       let sleepMs = 1500
 
        console.log("(getBlockchain) Sleeping for " + sleepMs + "ms...")
        await sleep(sleepMs)
@@ -669,7 +669,7 @@ class Wallet{
        console.log("status=" + response["status"])
        console.log("status type: " + typeof(response["status"]))
 
-       let sleepMs = 3000
+       let sleepMs = 1500
 
        console.log("(updateBalance) Sleeping for " + sleepMs + "ms...")
        await sleep(sleepMs)
