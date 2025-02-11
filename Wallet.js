@@ -1141,7 +1141,7 @@ async function loginOffline(username = "", password = "", encrypted = false){
         
 
 
-let sleepMs = 10000
+let sleepMs = 1500
 
 console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
 await sleep(sleepMs)
