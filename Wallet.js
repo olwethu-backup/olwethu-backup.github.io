@@ -635,20 +635,55 @@ class Wallet{
             
         }
 
-       let theResponses = await axios.all(urls).then(axios.spread((...responses) =>{
+       let theBalance = await axios.all(urls).then(axios.spread((...responses) =>{
 
-            // console.log('responses.length=' + responses.length)
-            // for (let r = 0; r < responses.length; r++){
-            //     console.log('**************')
-            //     console.log(responses[r])
-            //     console.log('%%%%%%%%%%%%%%')
-            //     console.log("\n\n\n")
-          
-            // }
-
+        console.log("responses = " + responses)
+        let response = responses[0] //TODO: modify this to seek the longest chain that was provided
+ 
+        console.log("response = " + response)
+        console.log("status=" + response["status"])
+        console.log("status type: " + typeof(response["status"]))
+ 
+      
+ 
+ 
+        if (response["status"] == 200){
+             let length = response["data"]["length"]
+             let chain = response["data"]["chain"]
+ 
+             console.log("chain (updateBalance) =")
+             console.log(chain)
+ 
+             this.readChain(chain)
+ 
+             this.total = this.available + this.pending
+ 
+             let pending = 0
+ 
+             for (var [key, value] of this.pastTransactions){
+                 console.log("-----------------------------------")
+                 if (this.pastTransactions.get(key)["status"] == "pending"){
+                        pending += parseFloat(this.pastTransactions.get(key)["amount"])
+                        console.log("FOUND PENDING TRANSACTION: " + key + "\nAMOUNT:" + parseFloat(this.pastTransactions.get(key)['amount']) + "\nPENDING: " + pending)                 
+                 } 
+ 
+             }
+ 
+             this.pending = pending
+             this.total = this.available + this.pending
+ 
+             console.log("____________________________________available balance")
+             this.updateFile("available balance", this.available)
+             console.log("____________________________________pending balance")
+             this.updateFile("pending balance", this.pending)
+             console.log("____________________________________total balance")
+             this.updateFile("total balance", this.total)
+             //TODO: test that this works (IMPORTANT)
+ 
+        }
 
             
-            return responses
+    
 
 
        })).catch(errors => {
@@ -666,54 +701,7 @@ class Wallet{
 
     //    }         
 
-       console.log("theResponses = " + theResponses)
-       let response = theResponses[0] //TODO: modify this to seek the longest chain that was provided
-
-       console.log("response = " + response)
-       console.log("status=" + response["status"])
-       console.log("status type: " + typeof(response["status"]))
-
-       let sleepMs = 1500
-
-       console.log("(updateBalance) Sleeping for " + sleepMs + "ms...")
-       await sleep(sleepMs)
-       console.log("(updateBalance) Done sleeping")
-
-
-       if (response["status"] == 200){
-            let length = response["data"]["length"]
-            let chain = response["data"]["chain"]
-
-            console.log("chain (updateBalance) =")
-            console.log(chain)
-
-            this.readChain(chain)
-
-            this.total = this.available + this.pending
-
-            let pending = 0
-
-            for (var [key, value] of this.pastTransactions){
-                console.log("-----------------------------------")
-                if (this.pastTransactions.get(key)["status"] == "pending"){
-                       pending += parseFloat(this.pastTransactions.get(key)["amount"])
-                       console.log("FOUND PENDING TRANSACTION: " + key + "\nAMOUNT:" + parseFloat(this.pastTransactions.get(key)['amount']) + "\nPENDING: " + pending)                 
-                } 
-
-            }
-
-            this.pending = pending
-            this.total = this.available + this.pending
-
-            console.log("____________________________________available balance")
-            this.updateFile("available balance", this.available)
-            console.log("____________________________________pending balance")
-            this.updateFile("pending balance", this.pending)
-            console.log("____________________________________total balance")
-            this.updateFile("total balance", this.total)
-            //TODO: test that this works (IMPORTANT)
-
-       }
+       
 
 
 
