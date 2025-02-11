@@ -1104,7 +1104,8 @@ async function loginOffline(username = "", password = "", encrypted = false){
         request.onerror = (event) => {
             console.error("request (loginOffline) ERROR!!")
         }
-
+    
+        console.log(`correct = ${correct}`)
 
     if(correct){
         console.log("username and password are correct")
