@@ -542,11 +542,11 @@ class Wallet{
        console.log("status=" + response["status"])
        console.log("status type: " + typeof(response["status"]))
 
-    //    let sleepMs = 10000
+       let sleepMs = 10000
 
-    //    console.log("(getBlockchain) Sleeping for " + sleepMs + "ms...")
-    //    await sleep(sleepMs)
-    //    console.log("(getBlockchain) Done sleeping")
+       console.log("(getBlockchain) Sleeping for " + sleepMs + "ms...")
+       await sleep(sleepMs)
+       console.log("(getBlockchain) Done sleeping")
 
 
        if (response["status"] == 200){
@@ -669,11 +669,11 @@ class Wallet{
        console.log("status=" + response["status"])
        console.log("status type: " + typeof(response["status"]))
 
-    //    let sleepMs = 10000
+       let sleepMs = 10000
 
-    //    console.log("(updateBalance) Sleeping for " + sleepMs + "ms...")
-    //    await sleep(sleepMs)
-    //    console.log("(updateBalance) Done sleeping")
+       console.log("(updateBalance) Sleeping for " + sleepMs + "ms...")
+       await sleep(sleepMs)
+       console.log("(updateBalance) Done sleeping")
 
 
        if (response["status"] == 200){
@@ -1141,11 +1141,11 @@ async function loginOffline(username = "", password = "", encrypted = false){
         
 
 
-// let sleepMs = 10000
+let sleepMs = 10000
 
-// console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
-// await sleep(sleepMs)
-// console.log("(loginOffline) Done sleeping")
+console.log("(loginOffline) Sleeping for " + sleepMs + "ms...")
+await sleep(sleepMs)
+console.log("(loginOffline) Done sleeping")
  
 
 console.log("ppppppppppppppp  " + walletDict + "  ppppppppppppppp" )
